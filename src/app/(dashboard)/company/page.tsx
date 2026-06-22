@@ -23,7 +23,9 @@ export default async function CompanyDashboardPage({
   const month = parseInt(params.month ?? String(now.getMonth() + 1))
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
 
-  // 全データを並列取得
+  const mWeekEnd = new Date(year, month, 0).toISOString().slice(0, 10)
+
+  // 全データを並列取得（部門別クエリもまとめて取得）
   const [
     { data: departments },
     { data: weights },
@@ -32,6 +34,10 @@ export default async function CompanyDashboardPage({
     { data: allProjects },
     { data: allPromo },
     { data: allFixed },
+    { data: allDeptTargets },
+    { data: allMembers },
+    { data: allInquiries },
+    { data: allNewProjects },
   ] = await Promise.all([
     supabase.from('departments').select('id, name, code').eq('is_active', true).order('sort_order'),
     supabase.from('prospect_weights').select('*'),
@@ -42,9 +48,14 @@ export default async function CompanyDashboardPage({
     supabase.from('targets').select('sales_target, profit_target')
       .eq('target_scope', 'company').eq('target_period', 'yearly')
       .eq('target_year', year).is('user_id', null).is('department_id', null).single(),
-    supabase.from('projects').select('id, status, sales_amount, cost_planned, cost_confirmed, prospect_rank, payment_plan_date, payment_date, contract_date, department_id').is('deleted_at', null),
-    supabase.from('promotional_expenses').select('amount').eq('expense_month', monthStart),
-    supabase.from('fixed_expenses').select('amount').eq('expense_month', monthStart),
+    supabase.from('projects').select('id, status, sales_amount, cost_planned, cost_confirmed, prospect_rank, payment_plan_date, payment_date, contract_date, department_id, created_by').is('deleted_at', null),
+    supabase.from('promotional_expenses').select('amount, department_id').eq('expense_month', monthStart),
+    supabase.from('fixed_expenses').select('amount, department_id').eq('expense_month', monthStart),
+    supabase.from('targets').select('department_id, target_period, target_month, sales_target, profit_target')
+      .eq('target_scope', 'department').eq('target_year', year).not('department_id', 'is', null),
+    supabase.from('users').select('id, department_id').eq('is_active', true).is('deleted_at', null),
+    supabase.from('inquiry_reports').select('user_id, count').gte('report_week', monthStart).lte('report_week', mWeekEnd),
+    supabase.from('projects').select('id, created_by').gte('created_at', `${monthStart}T00:00:00`).lte('created_at', `${mWeekEnd}T23:59:59`).is('deleted_at', null).neq('status', 'cancelled'),
   ])
 
   const totalPromo = (allPromo ?? []).reduce((s, e) => s + e.amount, 0)
@@ -63,101 +74,70 @@ export default async function CompanyDashboardPage({
     now
   )
 
-  // 部門別集計
-  const deptMetrics = await Promise.all(
-    (departments ?? []).map(async (dept) => {
-      const deptProjects = (allProjects ?? []).filter((p) => p.department_id === dept.id)
+  // バッチ取得データをJS側でグループ化
+  const promoByDept: Record<string, number> = {}
+  for (const e of allPromo ?? []) {
+    if (e.department_id) promoByDept[e.department_id] = (promoByDept[e.department_id] ?? 0) + e.amount
+  }
+  const fixedByDept: Record<string, number> = {}
+  for (const e of allFixed ?? []) {
+    if (e.department_id) fixedByDept[e.department_id] = (fixedByDept[e.department_id] ?? 0) + e.amount
+  }
+  const membersByDept: Record<string, string[]> = {}
+  for (const m of allMembers ?? []) {
+    if (m.department_id) {
+      membersByDept[m.department_id] = membersByDept[m.department_id] ?? []
+      membersByDept[m.department_id].push(m.id)
+    }
+  }
+  const inquiryByUser: Record<string, number> = {}
+  for (const r of allInquiries ?? []) {
+    inquiryByUser[r.user_id] = (inquiryByUser[r.user_id] ?? 0) + r.count
+  }
+  const newProjByUser: Record<string, number> = {}
+  for (const p of allNewProjects ?? []) {
+    if (p.created_by) newProjByUser[p.created_by] = (newProjByUser[p.created_by] ?? 0) + 1
+  }
 
-      const { data: dPromo } = await supabase
-        .from('promotional_expenses')
-        .select('amount')
-        .eq('department_id', dept.id)
-        .eq('expense_month', monthStart)
+  // 部門別集計（クエリなし・純粋JS集計）
+  const deptMetrics = (departments ?? []).map((dept) => {
+    const deptProjects = (allProjects ?? []).filter((p) => p.department_id === dept.id)
 
-      const { data: dFixed } = await supabase
-        .from('fixed_expenses')
-        .select('amount')
-        .eq('department_id', dept.id)
-        .eq('expense_month', monthStart)
+    const dMonthTarget = (allDeptTargets ?? []).find((t) =>
+      t.department_id === dept.id && t.target_period === 'monthly' && t.target_month === month
+    )
+    const dYearTarget = (allDeptTargets ?? []).find((t) =>
+      t.department_id === dept.id && t.target_period === 'yearly'
+    )
 
-      const { data: dMonthTarget } = await supabase
-        .from('targets')
-        .select('sales_target, profit_target')
-        .eq('department_id', dept.id)
-        .eq('target_scope', 'department')
-        .eq('target_period', 'monthly')
-        .eq('target_year', year)
-        .eq('target_month', month)
-        .single()
+    const m = aggregateProjects(
+      deptProjects as any[],
+      promoByDept[dept.id] ?? 0,
+      fixedByDept[dept.id] ?? 0,
+      dMonthTarget ?? null,
+      dYearTarget ?? null,
+      (weights ?? []) as ProspectWeight[],
+      year,
+      month,
+      now
+    )
 
-      const { data: dYearTarget } = await supabase
-        .from('targets')
-        .select('sales_target, profit_target')
-        .eq('department_id', dept.id)
-        .eq('target_scope', 'department')
-        .eq('target_period', 'yearly')
-        .eq('target_year', year)
-        .single()
+    const deptMemberIds = membersByDept[dept.id] ?? []
+    const dInquiry = deptMemberIds.reduce((s, id) => s + (inquiryByUser[id] ?? 0), 0)
+    const dMeeting = deptMemberIds.reduce((s, id) => s + (newProjByUser[id] ?? 0), 0)
+    const dContract = deptProjects.filter((p) =>
+      ['contracted','delivered','invoiced','paid'].includes(p.status)
+    ).length
 
-      const dPromoTotal = (dPromo ?? []).reduce((s, e) => s + e.amount, 0)
-      const dFixedTotal = (dFixed ?? []).reduce((s, e) => s + e.amount, 0)
-
-      const m = aggregateProjects(
-        deptProjects as any[],
-        dPromoTotal,
-        dFixedTotal,
-        dMonthTarget,
-        dYearTarget,
-        (weights ?? []) as ProspectWeight[],
-        year,
-        month,
-        now
-      )
-
-      // 部門の反響・接客集計
-      const { data: dMembers } = await supabase
-        .from('users')
-        .select('id')
-        .eq('department_id', dept.id)
-        .eq('is_active', true)
-        .is('deleted_at', null)
-
-      const mWeekEnd = new Date(year, month, 0).toISOString().slice(0, 10)
-      let dInquiry = 0
-      let dMeeting = 0
-      let dContract = 0
-      for (const mem of dMembers ?? []) {
-        const { data: inq } = await supabase
-          .from('inquiry_reports')
-          .select('count')
-          .eq('user_id', mem.id)
-          .gte('report_week', monthStart)
-          .lte('report_week', mWeekEnd)
-        dInquiry += (inq ?? []).reduce((s, r) => s + r.count, 0)
-        const { count: mtg } = await supabase
-          .from('projects')
-          .select('id', { count: 'exact', head: true })
-          .eq('created_by', mem.id)
-          .gte('created_at', `${monthStart}T00:00:00`)
-          .lte('created_at', `${mWeekEnd}T23:59:59`)
-          .is('deleted_at', null)
-          .neq('status', 'cancelled')
-        dMeeting += mtg ?? 0
-      }
-      dContract = deptProjects.filter((p) =>
-        ['contracted','delivered','invoiced','paid'].includes(p.status)
-      ).length
-
-      return {
-        dept, metrics: m,
-        inquiryCount: dInquiry,
-        meetingCount: dMeeting,
-        contractCount: dContract,
-        inquiryToMeeting: dInquiry > 0 ? Math.round(dMeeting / dInquiry * 100) : null,
-        meetingToContract: dMeeting > 0 ? Math.round(dContract / dMeeting * 100) : null,
-      }
-    })
-  )
+    return {
+      dept, metrics: m,
+      inquiryCount: dInquiry,
+      meetingCount: dMeeting,
+      contractCount: dContract,
+      inquiryToMeeting: dInquiry > 0 ? Math.round(dMeeting / dInquiry * 100) : null,
+      meetingToContract: dMeeting > 0 ? Math.round(dContract / dMeeting * 100) : null,
+    }
+  })
 
   // 月次トレンド（過去6ヶ月・全社）
   const trendData = await Promise.all(

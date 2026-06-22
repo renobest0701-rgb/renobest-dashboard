@@ -19,69 +19,77 @@ export default async function PersonalDashboardPage({
   const year = parseInt(params.year ?? String(now.getFullYear()))
   const month = parseInt(params.month ?? String(now.getMonth() + 1))
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
+  const monthEnd = new Date(year, month, 0).toISOString().slice(0, 10)
 
-  // 自分の担当案件（削除済み除く）
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .is('deleted_at', null)
-    .or(`created_by.eq.${user.id},id.in.(${
-      `select project_id from project_assignments where user_id='${user.id}'`
-    })`)
-    .order('updated_at', { ascending: false })
+  // Phase 1: ユーザーID取得と並列クエリ
+  const [
+    { data: projects },
+    { data: monthlyTarget },
+    { data: yearlyTarget },
+    { data: promoData },
+    { data: fixedData },
+    { data: weights },
+    { data: meUser },
+  ] = await Promise.all([
+    supabase.from('projects').select('*').is('deleted_at', null).eq('created_by', user.id).order('updated_at', { ascending: false }),
+    supabase.from('targets').select('*').eq('user_id', user.id).eq('target_scope', 'personal').eq('target_period', 'monthly').eq('target_year', year).eq('target_month', month).single(),
+    supabase.from('targets').select('*').eq('user_id', user.id).eq('target_scope', 'personal').eq('target_period', 'yearly').eq('target_year', year).single(),
+    supabase.from('promotional_expenses').select('amount, project_id').eq('user_id', user.id).eq('expense_month', monthStart),
+    supabase.from('fixed_expenses').select('amount').eq('user_id', user.id).eq('expense_month', monthStart),
+    supabase.from('prospect_weights').select('*'),
+    supabase.from('users').select('id').eq('auth_user_id', user.authId).single(),
+  ])
 
-  // 月次目標
-  const { data: monthlyTarget } = await supabase
-    .from('targets')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('target_scope', 'personal')
-    .eq('target_period', 'monthly')
-    .eq('target_year', year)
-    .eq('target_month', month)
-    .single()
+  const myUserId = meUser?.id
 
-  // 年次目標
-  const { data: yearlyTarget } = await supabase
-    .from('targets')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('target_scope', 'personal')
-    .eq('target_period', 'yearly')
-    .eq('target_year', year)
-    .single()
+  // Phase 2: ユーザーID依存クエリを並列実行
+  const trendMonths = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(year, month - 1 - (5 - i), 1)
+    return {
+      y: d.getFullYear(),
+      m: d.getMonth() + 1,
+      label: `${d.getMonth() + 1}月`,
+      start: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`,
+      end: new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10),
+    }
+  })
 
-  // 販促費（今月・担当者）
-  const { data: promoData } = await supabase
-    .from('promotional_expenses')
-    .select('amount, project_id')
-    .eq('user_id', user.id)
-    .eq('expense_month', monthStart)
+  const [
+    { data: inquiryData },
+    { count: newClientCount },
+    ...trendResults
+  ] = await Promise.all([
+    myUserId
+      ? supabase.from('inquiry_reports').select('count').eq('user_id', myUserId).gte('report_week', monthStart).lte('report_week', monthEnd)
+      : Promise.resolve({ data: [] as { count: number }[], error: null }),
+    supabase.from('projects').select('id', { count: 'exact', head: true }).eq('created_by', myUserId ?? '').gte('created_at', `${monthStart}T00:00:00`).lte('created_at', `${monthEnd}T23:59:59`).is('deleted_at', null).neq('status', 'cancelled'),
+    ...trendMonths.map(({ start, end }) =>
+      supabase.from('projects').select('status, sales_amount, cost_confirmed, cost_planned, payment_date, contract_date').eq('created_by', myUserId ?? '').is('deleted_at', null).gte('updated_at', `${start}T00:00:00`).lte('updated_at', `${end}T23:59:59`)
+    ),
+  ])
 
-  // 固定経費負担（今月）
-  const { data: fixedData } = await supabase
-    .from('fixed_expenses')
-    .select('amount')
-    .eq('user_id', user.id)
-    .eq('expense_month', monthStart)
-
-  // 見込み確度設定
-  const { data: weights } = await supabase
-    .from('prospect_weights')
-    .select('*')
+  const trendData = trendMonths.map(({ label }, i) => {
+    const tp = (trendResults[i] as any)?.data ?? []
+    const paid = tp.filter((p: any) => p.status === 'paid')
+    const contracted = tp.filter((p: any) => ['contracted','delivered','invoiced','paid'].includes(p.status))
+    return {
+      month: label,
+      入金売上: paid.reduce((s: number, p: any) => s + p.sales_amount, 0),
+      契約売上: contracted.reduce((s: number, p: any) => s + p.sales_amount, 0),
+      実現利益: paid.reduce((s: number, p: any) => s + p.sales_amount - p.cost_confirmed, 0),
+      契約利益: contracted.reduce((s: number, p: any) => s + p.sales_amount - p.cost_planned, 0),
+    }
+  })
 
   const allProjects = (projects ?? []) as Project[]
 
-  // 今月の案件（contract_date, payment_date, application_dateが今月 or 現在進行中）
   const monthProjects = allProjects.filter((p) => {
-    const relevantDate = p.payment_date || p.invoice_date || p.delivery_date ||
-                         p.contract_date || p.application_date || p.updated_at
+    const relevantDate = p.payment_date || p.invoice_date || p.delivery_date || p.contract_date || p.application_date || p.updated_at
     if (!relevantDate) return false
     const d = new Date(relevantDate)
     return d.getFullYear() === year && d.getMonth() + 1 === month
   })
 
-  // 見込み案件は常に含める
   const activeProspects = allProjects.filter((p) =>
     ['new','negotiating','prospect_b','prospect_a'].includes(p.status)
   )
@@ -101,7 +109,7 @@ export default async function PersonalDashboardPage({
   const inputs = metricsProjects.map((p) => ({
     project: p,
     promoExpenses: promoByProject[p.id] ?? 0,
-    fixedExpenseShare: 0,  // 固定費は月次合計で別途加算
+    fixedExpenseShare: 0,
   }))
 
   const metrics = calcPersonalMetrics(
@@ -111,7 +119,6 @@ export default async function PersonalDashboardPage({
     now
   )
 
-  // 固定費は全体合計で実現利益から引く（calcPersonalMetricsの結果を上書き）
   const adjustedRealizedProfit = metrics.realizedProfit - totalFixed
   const adjustedLanding = metrics.landingForecast - totalFixed
 
@@ -120,66 +127,10 @@ export default async function PersonalDashboardPage({
     return acc
   }, {} as Record<string, number>)
 
-  // 自分のユーザーID取得
-  const { data: meUser } = await supabase
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .single()
-  const myUserId = meUser?.id
-
-  // 選択月の反響件数（週集計の合計）
-  const weekStart = monthStart
-  const weekEnd = new Date(year, month, 0).toISOString().slice(0, 10)
-  const { data: inquiryData } = myUserId ? await supabase
-    .from('inquiry_reports')
-    .select('count')
-    .eq('user_id', myUserId)
-    .gte('report_week', weekStart)
-    .lte('report_week', weekEnd) : { data: [] }
   const totalInquiry = (inquiryData ?? []).reduce((s, r) => s + r.count, 0)
-
-  // 今月の新規接客数（案件登録数）
-  const { count: newClientCount } = await supabase
-    .from('projects')
-    .select('id', { count: 'exact', head: true })
-    .eq('created_by', myUserId ?? '')
-    .gte('created_at', `${weekStart}T00:00:00`)
-    .lte('created_at', `${weekEnd}T23:59:59`)
-    .is('deleted_at', null)
-    .neq('status', 'cancelled')
-
-  // 今月の契約件数
   const contractCount = statusCounts['contracted'] ?? 0
-
-  // 転換率
   const inquiryToMeeting = totalInquiry > 0 ? Math.round((newClientCount ?? 0) / totalInquiry * 100) : null
   const meetingToContract = (newClientCount ?? 0) > 0 ? Math.round(contractCount / (newClientCount ?? 1) * 100) : null
-
-  // 月次トレンドデータ（選択月を含む過去6ヶ月）
-  const trendMonths = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(year, month - 1 - (5 - i), 1)
-    return { y: d.getFullYear(), m: d.getMonth() + 1, label: `${d.getMonth() + 1}月` }
-  })
-
-  const trendData = await Promise.all(
-    trendMonths.map(async ({ y, m, label }) => {
-      const { data: tp } = await supabase
-        .from('projects')
-        .select('status, sales_amount, cost_confirmed, cost_planned')
-        .eq('created_by', myUserId ?? '')
-        .is('deleted_at', null)
-      const paid = (tp ?? []).filter((p) => p.status === 'paid')
-      const contracted = (tp ?? []).filter((p) => ['contracted','delivered','invoiced','paid'].includes(p.status))
-      return {
-        month: label,
-        入金売上: paid.reduce((s, p) => s + p.sales_amount, 0),
-        契約売上: contracted.reduce((s, p) => s + p.sales_amount, 0),
-        実現利益: paid.reduce((s, p) => s + p.sales_amount - p.cost_confirmed, 0),
-        契約利益: contracted.reduce((s, p) => s + p.sales_amount - p.cost_planned, 0),
-      }
-    })
-  )
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -212,7 +163,6 @@ export default async function PersonalDashboardPage({
       <section>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">月間成績</h2>
 
-        {/* 進捗バー */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4 space-y-4">
           <ProgressBar
             label="売上進捗率"
@@ -233,7 +183,6 @@ export default async function PersonalDashboardPage({
           />
         </div>
 
-        {/* 売上カード */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">
           <MetricCard label="月間売上目標"         value={formatYen(metrics.salesTarget)} variant="primary" />
           <MetricCard label="契約・受注済売上"      value={formatYen(metrics.contractedSales)} />
@@ -241,7 +190,6 @@ export default async function PersonalDashboardPage({
           <MetricCard label="入金済売上"            value={formatYen(metrics.paidSales)} variant="success" />
         </div>
 
-        {/* 利益カード */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">
           <MetricCard label="月間利益目標"          value={formatYen(metrics.profitTarget)} variant="primary" />
           <MetricCard label="契約ベース利益"         value={formatYen(metrics.contractProfit)} />
@@ -251,7 +199,6 @@ export default async function PersonalDashboardPage({
           <MetricCard label="加重見込み利益"         value={formatYen(metrics.weightedProspectProfit)} />
         </div>
 
-        {/* 経費・着地 */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           <MetricCard label="販促費"                value={formatYen(totalPromo)} />
           <MetricCard label="固定経費負担額"         value={formatYen(totalFixed)} />
@@ -271,7 +218,6 @@ export default async function PersonalDashboardPage({
         </div>
       </section>
 
-      {/* 入金待ち */}
       {metrics.pendingPaymentCount > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">入金待ち状況</h2>
@@ -289,7 +235,6 @@ export default async function PersonalDashboardPage({
         </section>
       )}
 
-      {/* 反響・接客 */}
       <section>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">反響・接客（今月）</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -308,7 +253,6 @@ export default async function PersonalDashboardPage({
         </div>
       </section>
 
-      {/* グラフ */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">月次売上推移（過去6ヶ月）</h3>
@@ -320,7 +264,6 @@ export default async function PersonalDashboardPage({
         </div>
       </section>
 
-      {/* 営業実績 */}
       <section>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">営業実績（累計）</h2>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
