@@ -23,54 +23,29 @@ export default async function CompanyDashboardPage({
   const month = parseInt(params.month ?? String(now.getMonth() + 1))
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
 
-  const { data: departments } = await supabase
-    .from('departments')
-    .select('id, name, code')
-    .eq('is_active', true)
-    .order('sort_order')
-
-  const { data: weights } = await supabase
-    .from('prospect_weights')
-    .select('*')
-
-  // 全社目標
-  const { data: companyMonthlyTarget } = await supabase
-    .from('targets')
-    .select('sales_target, profit_target')
-    .eq('target_scope', 'company')
-    .eq('target_period', 'monthly')
-    .eq('target_year', year)
-    .eq('target_month', month)
-    .is('user_id', null)
-    .is('department_id', null)
-    .single()
-
-  const { data: companyYearlyTarget } = await supabase
-    .from('targets')
-    .select('sales_target, profit_target')
-    .eq('target_scope', 'company')
-    .eq('target_period', 'yearly')
-    .eq('target_year', year)
-    .is('user_id', null)
-    .is('department_id', null)
-    .single()
-
-  // 全案件
-  const { data: allProjects } = await supabase
-    .from('projects')
-    .select('id, status, sales_amount, cost_planned, cost_confirmed, prospect_rank, payment_plan_date, payment_date, contract_date, department_id')
-    .is('deleted_at', null)
-
-  // 全社販促費・固定経費
-  const { data: allPromo } = await supabase
-    .from('promotional_expenses')
-    .select('amount')
-    .eq('expense_month', monthStart)
-
-  const { data: allFixed } = await supabase
-    .from('fixed_expenses')
-    .select('amount')
-    .eq('expense_month', monthStart)
+  // 全データを並列取得
+  const [
+    { data: departments },
+    { data: weights },
+    { data: companyMonthlyTarget },
+    { data: companyYearlyTarget },
+    { data: allProjects },
+    { data: allPromo },
+    { data: allFixed },
+  ] = await Promise.all([
+    supabase.from('departments').select('id, name, code').eq('is_active', true).order('sort_order'),
+    supabase.from('prospect_weights').select('*'),
+    supabase.from('targets').select('sales_target, profit_target')
+      .eq('target_scope', 'company').eq('target_period', 'monthly')
+      .eq('target_year', year).eq('target_month', month)
+      .is('user_id', null).is('department_id', null).single(),
+    supabase.from('targets').select('sales_target, profit_target')
+      .eq('target_scope', 'company').eq('target_period', 'yearly')
+      .eq('target_year', year).is('user_id', null).is('department_id', null).single(),
+    supabase.from('projects').select('id, status, sales_amount, cost_planned, cost_confirmed, prospect_rank, payment_plan_date, payment_date, contract_date, department_id').is('deleted_at', null),
+    supabase.from('promotional_expenses').select('amount').eq('expense_month', monthStart),
+    supabase.from('fixed_expenses').select('amount').eq('expense_month', monthStart),
+  ])
 
   const totalPromo = (allPromo ?? []).reduce((s, e) => s + e.amount, 0)
   const totalFixed = (allFixed ?? []).reduce((s, e) => s + e.amount, 0)
