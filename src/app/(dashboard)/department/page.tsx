@@ -1,5 +1,6 @@
 import { requireAuth, isDeptManager, isAdminOrExecutive } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { getDepartments, getProspectWeights } from '@/lib/cached-data'
 import { redirect } from 'next/navigation'
 import { aggregateProjects, formatYen, formatPercent, calcProgressRate } from '@/lib/calculations'
 import { MetricCard, ProgressBar } from '@/components/dashboard/MetricCard'
@@ -30,12 +31,8 @@ export default async function DepartmentDashboardPage({
   const month = parseInt(params.month ?? String(now.getMonth() + 1))
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
 
-  // 部門一覧
-  const { data: departments } = await supabase
-    .from('departments')
-    .select('id, name, code')
-    .eq('is_active', true)
-    .order('sort_order')
+  // 部門一覧（キャッシュ）
+  const departments = await getDepartments()
 
   // アクセス可能な部門を絞る
   const accessibleDepts = isAdminOrExecutive(user)
@@ -56,7 +53,7 @@ export default async function DepartmentDashboardPage({
   // 全データを並列取得
   const [
     { data: projects },
-    { data: weights },
+    weights,
     { data: deptTargets },
     { data: promoData },
     { data: fixedData },
@@ -68,7 +65,7 @@ export default async function DepartmentDashboardPage({
     { data: allNewProjects },
   ] = await Promise.all([
     supabase.from('projects').select('id, status, sales_amount, cost_planned, cost_confirmed, prospect_rank, payment_plan_date, payment_date, contract_date, created_by').eq('department_id', selectedDeptId).is('deleted_at', null),
-    supabase.from('prospect_weights').select('*'),
+    getProspectWeights(),
     supabase.from('targets').select('target_period, target_month, sales_target, profit_target').eq('department_id', selectedDeptId).eq('target_scope', 'department').eq('target_year', year),
     supabase.from('promotional_expenses').select('amount').eq('department_id', selectedDeptId).eq('expense_month', monthStart),
     supabase.from('fixed_expenses').select('amount').eq('department_id', selectedDeptId).eq('expense_month', monthStart),
@@ -109,7 +106,7 @@ export default async function DepartmentDashboardPage({
     fixedTotal,
     monthlyTarget,
     yearlyTarget,
-    (weights ?? []) as ProspectWeight[],
+    weights as ProspectWeight[],
     year,
     month,
     now

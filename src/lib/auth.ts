@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Role, User } from '@/types'
@@ -12,7 +13,7 @@ export interface AuthUser {
   departmentRoles: { role: Role; departmentId: string | null }[]
 }
 
-export async function getAuthUser(): Promise<AuthUser | null> {
+export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -49,7 +50,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     roles,
     departmentRoles,
   }
-}
+})
 
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getAuthUser()

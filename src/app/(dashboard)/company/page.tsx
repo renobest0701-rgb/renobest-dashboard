@@ -1,5 +1,6 @@
 import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { getDepartments, getProspectWeights } from '@/lib/cached-data'
 import { aggregateProjects, formatYen, formatPercent, calcProgressRate } from '@/lib/calculations'
 import { MetricCard, ProgressBar } from '@/components/dashboard/MetricCard'
 import { SalesProgressChart } from '@/components/charts/SalesProgressChart'
@@ -27,8 +28,8 @@ export default async function CompanyDashboardPage({
 
   // 全データを並列取得（部門別クエリもまとめて取得）
   const [
-    { data: departments },
-    { data: weights },
+    departments,
+    weights,
     { data: companyMonthlyTarget },
     { data: companyYearlyTarget },
     { data: allProjects },
@@ -39,8 +40,8 @@ export default async function CompanyDashboardPage({
     { data: allInquiries },
     { data: allNewProjects },
   ] = await Promise.all([
-    supabase.from('departments').select('id, name, code').eq('is_active', true).order('sort_order'),
-    supabase.from('prospect_weights').select('*'),
+    getDepartments(),
+    getProspectWeights(),
     supabase.from('targets').select('sales_target, profit_target')
       .eq('target_scope', 'company').eq('target_period', 'monthly')
       .eq('target_year', year).eq('target_month', month)
@@ -68,7 +69,7 @@ export default async function CompanyDashboardPage({
     totalFixed,
     companyMonthlyTarget,
     companyYearlyTarget,
-    (weights ?? []) as ProspectWeight[],
+    weights as ProspectWeight[],
     year,
     month,
     now
@@ -100,7 +101,7 @@ export default async function CompanyDashboardPage({
   }
 
   // 部門別集計（クエリなし・純粋JS集計）
-  const deptMetrics = (departments ?? []).map((dept) => {
+  const deptMetrics = departments.map((dept) => {
     const deptProjects = (allProjects ?? []).filter((p) => p.department_id === dept.id)
 
     const dMonthTarget = (allDeptTargets ?? []).find((t) =>
@@ -116,7 +117,7 @@ export default async function CompanyDashboardPage({
       fixedByDept[dept.id] ?? 0,
       dMonthTarget ?? null,
       dYearTarget ?? null,
-      (weights ?? []) as ProspectWeight[],
+      weights as ProspectWeight[],
       year,
       month,
       now

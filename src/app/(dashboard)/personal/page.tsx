@@ -1,5 +1,6 @@
 import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { getProspectWeights } from '@/lib/cached-data'
 import { calcPersonalMetrics, formatYen, formatPercent } from '@/lib/calculations'
 import { MetricCard, ProgressBar } from '@/components/dashboard/MetricCard'
 import { SalesTrendChart } from '@/components/charts/SalesTrendChart'
@@ -28,7 +29,7 @@ export default async function PersonalDashboardPage({
     { data: yearlyTarget },
     { data: promoData },
     { data: fixedData },
-    { data: weights },
+    weights,
     { data: meUser },
   ] = await Promise.all([
     supabase.from('projects').select('*').is('deleted_at', null).eq('created_by', user.id).order('updated_at', { ascending: false }),
@@ -36,7 +37,7 @@ export default async function PersonalDashboardPage({
     supabase.from('targets').select('*').eq('user_id', user.id).eq('target_scope', 'personal').eq('target_period', 'yearly').eq('target_year', year).single(),
     supabase.from('promotional_expenses').select('amount, project_id').eq('user_id', user.id).eq('expense_month', monthStart),
     supabase.from('fixed_expenses').select('amount').eq('user_id', user.id).eq('expense_month', monthStart),
-    supabase.from('prospect_weights').select('*'),
+    getProspectWeights(),
     supabase.from('users').select('id').eq('auth_user_id', user.authId).single(),
   ])
 
@@ -115,7 +116,7 @@ export default async function PersonalDashboardPage({
   const metrics = calcPersonalMetrics(
     inputs,
     monthlyTarget as Target | null,
-    (weights ?? []) as ProspectWeight[],
+    weights as ProspectWeight[],
     now
   )
 
