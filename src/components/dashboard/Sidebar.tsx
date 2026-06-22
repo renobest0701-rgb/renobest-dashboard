@@ -42,7 +42,6 @@ const navGroups: NavGroup[] = [
   {
     label: '承認・申請',
     items: [
-      { href: '/approvals',       label: '承認一覧',     icon: <CheckSquare className="w-4 h-4" />, roles: ['manager','accounting','executive'] },
       { href: '/admin/approvals', label: '承認申請管理', icon: <CheckSquare className="w-4 h-4" />, roles: ['manager','accounting','executive'] },
     ],
   },
