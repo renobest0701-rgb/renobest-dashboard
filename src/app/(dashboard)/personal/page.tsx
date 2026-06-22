@@ -6,13 +6,18 @@ import { SalesTrendChart } from '@/components/charts/SalesTrendChart'
 import { ProfitTrendChart } from '@/components/charts/ProfitTrendChart'
 import type { Project, Target, ProspectWeight } from '@/types'
 
-export default async function PersonalDashboardPage() {
+export default async function PersonalDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string }>
+}) {
   const user = await requireAuth()
   const supabase = await createClient()
+  const params = await searchParams
 
   const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
+  const year = parseInt(params.year ?? String(now.getFullYear()))
+  const month = parseInt(params.month ?? String(now.getMonth() + 1))
   const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
 
   // 自分の担当案件（削除済み除く）
@@ -123,8 +128,8 @@ export default async function PersonalDashboardPage() {
     .single()
   const myUserId = meUser?.id
 
-  // 今月の反響件数（週集計の合計）
-  const weekStart = `${year}-${String(month).padStart(2, '0')}-01`
+  // 選択月の反響件数（週集計の合計）
+  const weekStart = monthStart
   const weekEnd = new Date(year, month, 0).toISOString().slice(0, 10)
   const { data: inquiryData } = myUserId ? await supabase
     .from('inquiry_reports')
@@ -151,7 +156,7 @@ export default async function PersonalDashboardPage() {
   const inquiryToMeeting = totalInquiry > 0 ? Math.round((newClientCount ?? 0) / totalInquiry * 100) : null
   const meetingToContract = (newClientCount ?? 0) > 0 ? Math.round(contractCount / (newClientCount ?? 1) * 100) : null
 
-  // 月次トレンドデータ（過去6ヶ月）
+  // 月次トレンドデータ（選択月を含む過去6ヶ月）
   const trendMonths = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(year, month - 1 - (5 - i), 1)
     return { y: d.getFullYear(), m: d.getMonth() + 1, label: `${d.getMonth() + 1}月` }
@@ -178,13 +183,29 @@ export default async function PersonalDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{user.fullName} さんの成績</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {year}年{month}月 — リアルタイム集計
-          </p>
+          <p className="text-sm text-gray-500 mt-0.5">{year}年{month}月 — リアルタイム集計</p>
         </div>
+        <form className="flex gap-2">
+          <select name="year" defaultValue={year}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {[year - 1, year, year + 1].map((y) => (
+              <option key={y} value={y}>{y}年</option>
+            ))}
+          </select>
+          <select name="month" defaultValue={month}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+              <option key={m} value={m}>{m}月</option>
+            ))}
+          </select>
+          <button type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+            表示
+          </button>
+        </form>
       </div>
 
       {/* 月間 */}
