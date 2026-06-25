@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, isNonSales } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -21,6 +21,7 @@ const PaymentSchema = z.object({
 
 export async function registerPayment(formData: FormData) {
   const user = await requireAuth()
+  if (isNonSales(user)) throw new Error('閲覧専用アカウントは入金登録できません')
   const raw = Object.fromEntries(formData)
 
   const parsed = PaymentSchema.safeParse(raw)

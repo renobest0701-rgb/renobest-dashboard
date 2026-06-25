@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     .from('projects')
     .select(`
       name, status, sales_amount, cost_planned, cost_confirmed,
-      flow_type, echo_date, first_meeting_date, application_date,
+      flow_type, flow_detail, echo_date, first_meeting_date, application_date,
       contract_date, delivery_date, invoice_date, payment_date,
       payment_plan_date, created_at,
       department:departments(name),
@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       顧客: (p.customer as any)?.name ?? '',
       ステータス: PROJECT_STATUS_LABELS[p.status as keyof typeof PROJECT_STATUS_LABELS] ?? p.status,
       商流区分: FLOW_TYPE_LABELS[p.flow_type as keyof typeof FLOW_TYPE_LABELS] ?? p.flow_type,
+      商流詳細: (p as any).flow_detail ?? '',
       売上予定額: p.sales_amount,
       予定原価: p.cost_planned,
       確定原価: p.cost_confirmed,
