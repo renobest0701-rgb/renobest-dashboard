@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, isNonSales } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -17,6 +17,7 @@ const ProjectSchema = z.object({
   customer_name:     z.string().optional(),
   flow_type:         z.string(),
   client_name:       z.string().optional(),
+  referrer_name:     z.string().optional(),
   sales_amount:      z.coerce.number().int().min(0).default(0),
   cost_planned:      z.coerce.number().int().min(0).default(0),
   prospect_rank:     z.enum(['a','b','other']).default('b'),
@@ -26,6 +27,7 @@ const ProjectSchema = z.object({
   contract_plan_date:z.string().optional(),
   contract_date:     z.string().optional(),
   delivery_plan_date:z.string().optional(),
+  invoice_plan_date: z.string().optional(),
   payment_plan_date: z.string().optional(),
   customer_memo:     z.string().optional(),
   negotiation_memo:  z.string().optional(),
@@ -37,6 +39,8 @@ const ProjectSchema = z.object({
 // ============================================================
 export async function createProject(formData: FormData) {
   const user = await requireAuth()
+  if (isNonSales(user)) return { error: '閲覧専用アカウントは案件を登録できません' }
+
   const supabase = await createClient()
 
   const raw = Object.fromEntries(formData)
@@ -112,6 +116,7 @@ export async function changeProjectStatus(
   reason?: string
 ) {
   const user = await requireAuth()
+  if (isNonSales(user)) return { error: '閲覧専用アカウントはステータス変更できません' }
   const supabase = await createClient()
 
   const { data: project } = await supabase
@@ -202,6 +207,7 @@ export async function updateProjectFreeFields(
   }
 ) {
   const user = await requireAuth()
+  if (isNonSales(user)) return { error: '閲覧専用アカウントは編集できません' }
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -227,6 +233,7 @@ export async function requestImportantChange(
   reason: string
 ) {
   const user = await requireAuth()
+  if (isNonSales(user)) return { error: '閲覧専用アカウントは変更申請できません' }
   const supabase = await createClient()
 
   const { error } = await supabase.from('approval_requests').insert({

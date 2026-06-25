@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { requireAuth, isAdminOrExecutive, isDeptManager } from '@/lib/auth'
+import { requireAuth, isAdminOrExecutive, isDeptManager, isNonSales } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { PROJECT_STATUS_LABELS, type Project, type ProjectStatus } from '@/types'
 import { formatYen } from '@/lib/calculations'
@@ -26,6 +26,7 @@ export default async function ProjectsPage({
   searchParams: Promise<{ status?: string; q?: string }>
 }) {
   const user = await requireAuth()
+  const readOnly = isNonSales(user)
   const supabase = await createClient()
   const params = await searchParams
 
@@ -70,13 +71,15 @@ export default async function ProjectsPage({
             <Download className="w-4 h-4" />
             CSV出力
           </a>
-          <Link
-            href="/projects/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            新規案件登録
-          </Link>
+          {!readOnly && (
+            <Link
+              href="/projects/new"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              新規案件登録
+            </Link>
+          )}
         </div>
       </div>
 

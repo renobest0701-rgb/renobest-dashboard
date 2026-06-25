@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { requireAuth, canViewProject } from '@/lib/auth'
+import { requireAuth, canViewProject, isNonSales } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { PROJECT_STATUS_LABELS, FLOW_TYPE_LABELS, type Project, type ProjectStatus } from '@/types'
 import { formatYen, calcProjectDurations } from '@/lib/calculations'
@@ -40,6 +40,7 @@ export default async function ProjectDetailPage({
 
   if (!canViewProject(user, project)) notFound()
 
+  const readOnly = isNonSales(user)
   const durations = calcProjectDurations(project as Project)
   const today = new Date().toISOString().split('T')[0]
   const isOverdue = project.payment_plan_date && !project.payment_date &&
@@ -191,22 +192,24 @@ export default async function ProjectDetailPage({
           </div>
 
           {/* 会社/チーム負担 */}
-          <SharingEditor
-            projectId={project.id}
-            salesAmount={project.sales_amount}
-            companySalesShare={project.company_sales_share ?? 0}
-            teamSalesShare={project.team_sales_share ?? 0}
-            companyCostShare={project.company_cost_share ?? 0}
-            teamCostShare={project.team_cost_share ?? 0}
-            isLocked={project.is_locked}
-          />
+          {!readOnly && (
+            <SharingEditor
+              projectId={project.id}
+              salesAmount={project.sales_amount}
+              companySalesShare={project.company_sales_share ?? 0}
+              teamSalesShare={project.team_sales_share ?? 0}
+              companyCostShare={project.company_cost_share ?? 0}
+              teamCostShare={project.team_cost_share ?? 0}
+              isLocked={project.is_locked}
+            />
+          )}
 
           {/* 共同担当者 */}
           <AssignmentsEditor
             projectId={project.id}
             assignments={project.assignments ?? []}
             createdByName={project.created_by_user?.full_name ?? ''}
-            isLocked={project.is_locked}
+            isLocked={project.is_locked || readOnly}
           />
 
           {/* メモ */}
@@ -238,27 +241,37 @@ export default async function ProjectDetailPage({
 
         {/* 右：ステータス変更 */}
         <div className="space-y-4">
-          <StatusChangeForm
-            projectId={project.id}
-            currentStatus={project.status}
-            isLocked={project.is_locked}
-            pendingFields={Array.from(pendingFields)}
-          />
+          {readOnly && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-500 text-center">
+              閲覧専用モード
+            </div>
+          )}
 
-          <ImportantChangeForm
-            projectId={project.id}
-            currentValues={{
-              sales_amount:      project.sales_amount,
-              cost_planned:      project.cost_planned,
-              cost_confirmed:    project.cost_confirmed,
-              contract_date:     project.contract_date,
-              payment_plan_date: project.payment_plan_date,
-            }}
-            pendingFields={Array.from(pendingFields)}
-          />
+          {!readOnly && (
+            <StatusChangeForm
+              projectId={project.id}
+              currentStatus={project.status}
+              isLocked={project.is_locked}
+              pendingFields={Array.from(pendingFields)}
+            />
+          )}
+
+          {!readOnly && (
+            <ImportantChangeForm
+              projectId={project.id}
+              currentValues={{
+                sales_amount:      project.sales_amount,
+                cost_planned:      project.cost_planned,
+                cost_confirmed:    project.cost_confirmed,
+                contract_date:     project.contract_date,
+                payment_plan_date: project.payment_plan_date,
+              }}
+              pendingFields={Array.from(pendingFields)}
+            />
+          )}
 
           {/* 入金登録ボタン（delivered状態のみ） */}
-          {project.status === 'delivered' && (
+          {!readOnly && project.status === 'delivered' && (
             <a href={`/projects/${project.id}/payment`}
               className="block w-full px-4 py-3 bg-green-600 text-white rounded-xl text-sm font-medium text-center hover:bg-green-700 transition-colors">
               入金登録する

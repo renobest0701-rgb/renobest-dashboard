@@ -42,6 +42,8 @@ export type FlowType =
   | 'new_build_consignment'
   | 'vr_consignment'
   | 'joint'
+  | 'ad_agency'
+  | 'internal'
   | 'other'
 
 export const FLOW_TYPE_LABELS: Record<FlowType, string> = {
@@ -53,6 +55,8 @@ export const FLOW_TYPE_LABELS: Record<FlowType, string> = {
   new_build_consignment:'新築販売受託',
   vr_consignment:       'VR・制作受託',
   joint:                '共同案件',
+  ad_agency:            '広告代理店',
+  internal:             '社内',
   other:                'その他',
 }
 

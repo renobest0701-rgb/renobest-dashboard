@@ -76,6 +76,10 @@ export function isDeptManager(user: AuthUser, departmentId?: string): boolean {
   return false
 }
 
+export function isNonSales(user: AuthUser): boolean {
+  return hasRole(user, 'non_sales') && !isAdminOrExecutive(user) && !isDeptManager(user)
+}
+
 export function canViewProject(user: AuthUser, project: { created_by: string; department_id: string }): boolean {
   if (isAdminOrExecutive(user)) return true
   if (isDeptManager(user, project.department_id)) return true

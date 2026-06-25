@@ -1,20 +1,20 @@
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, isNonSales } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { InquiryForm } from './InquiryForm'
 
 export default async function InquiryPage() {
   const user = await requireAuth()
+  if (isNonSales(user)) redirect('/personal')
 
   const supabase = await createClient()
 
-  // 自分のユーザーID取得
   const { data: me } = await supabase
     .from('users')
     .select('id, full_name')
-    .eq('auth_user_id', user.id)
+    .eq('auth_user_id', user.authId)
     .single()
 
-  // 管理者は全ユーザー選択可能
   const isManager = user.roles.some((r) => ['manager','accounting','executive'].includes(r))
   let staffList: { id: string; full_name: string }[] = []
   if (isManager) {
@@ -22,8 +22,11 @@ export default async function InquiryPage() {
       .from('users')
       .select('id, full_name')
       .eq('is_active', true)
+      .is('deleted_at', null)
       .order('full_name')
-    staffList = data ?? []
+    // ログインユーザーを先頭に
+    const others = (data ?? []).filter((s) => s.id !== me?.id)
+    staffList = me ? [me, ...others] : (data ?? [])
   }
 
   return (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { createProject } from '../actions'
 import { FLOW_TYPE_LABELS } from '@/types'
 
@@ -10,6 +10,7 @@ interface Department {
 }
 
 export function NewProjectForm({ departments }: { departments: Department[] }) {
+  const [showDetail, setShowDetail] = useState(false)
   const [state, action, pending] = useActionState(
     async (_prev: { error?: string } | null, formData: FormData) => {
       const result = await createProject(formData)
@@ -102,7 +103,7 @@ export function NewProjectForm({ departments }: { departments: Department[] }) {
         </select>
       </div>
 
-      {/* 日付 */}
+      {/* 基本日付 */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">新規反響日</label>
@@ -126,7 +127,78 @@ export function NewProjectForm({ departments }: { departments: Department[] }) {
         </div>
       </div>
 
-      {/* メモ */}
+      {/* 詳細項目トグル */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowDetail(!showDetail)}
+          className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
+        >
+          <span>{showDetail ? '▲' : '▼'}</span>
+          詳細項目を{showDetail ? '閉じる' : '入力する'}
+        </button>
+      </div>
+
+      {showDetail && (
+        <div className="space-y-5 border-t border-gray-100 pt-4">
+          {/* 顧客・発注者 / 紹介者 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">顧客・発注者名</label>
+              <input name="client_name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="発注元会社・担当者名" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">紹介者</label>
+              <input name="referrer_name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="紹介者名" />
+            </div>
+          </div>
+
+          {/* 追加日付 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">申込日</label>
+              <input type="date" name="application_date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">契約日</label>
+              <input type="date" name="contract_date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">引渡し予定日</label>
+              <input type="date" name="delivery_plan_date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">請求予定日</label>
+              <input type="date" name="invoice_plan_date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          {/* メモ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">顧客メモ</label>
+            <textarea name="customer_memo" rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="顧客に関するメモ" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">コメント</label>
+            <textarea name="comment" rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="その他コメント" />
+          </div>
+        </div>
+      )}
+
+      {/* 商談メモは常に表示 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">商談メモ</label>
         <textarea name="negotiation_memo" rows={3}
