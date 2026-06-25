@@ -155,6 +155,7 @@ export interface Project {
   created_by: string
   status: ProjectStatus
   flow_type: FlowType
+  flow_detail: string | null
   client_name: string | null
   referrer_name: string | null
   contractor_name: string | null

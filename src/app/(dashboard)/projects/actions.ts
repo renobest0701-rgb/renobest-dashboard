@@ -16,6 +16,7 @@ const ProjectSchema = z.object({
   department_id:     z.string().uuid('部門を選択してください'),
   customer_name:     z.string().optional(),
   flow_type:         z.string(),
+  flow_detail:       z.string().optional(),
   client_name:       z.string().optional(),
   referrer_name:     z.string().optional(),
   sales_amount:      z.coerce.number().int().min(0).default(0),
@@ -213,6 +214,30 @@ export async function updateProjectFreeFields(
   const { error } = await supabase
     .from('projects')
     .update(data)
+    .eq('id', projectId)
+    .not('is_locked', 'eq', true)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/projects/${projectId}`)
+  return { success: true }
+}
+
+// ============================================================
+// 商流情報の更新
+// ============================================================
+export async function updateFlowInfo(
+  projectId: string,
+  flowType: string,
+  flowDetail: string
+) {
+  const user = await requireAuth()
+  if (isNonSales(user)) return { error: '閲覧専用アカウントは編集できません' }
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ flow_type: flowType, flow_detail: flowDetail })
     .eq('id', projectId)
     .not('is_locked', 'eq', true)
 

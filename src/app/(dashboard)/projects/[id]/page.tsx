@@ -8,6 +8,7 @@ import { ImportantChangeForm } from '@/components/projects/ImportantChangeForm'
 import { SharingEditor } from '@/components/projects/SharingEditor'
 import { AssignmentsEditor } from '@/components/projects/AssignmentsEditor'
 import { AlertTriangle, Lock } from 'lucide-react'
+import { FlowEditor } from '@/components/projects/FlowEditor'
 
 export default async function ProjectDetailPage({
   params,
@@ -169,27 +170,42 @@ export default async function ProjectDetailPage({
           </div>
 
           {/* 商流 */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 mb-3">商流情報</h2>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
-              <div className="flex justify-between border-b border-gray-100 pb-2">
-                <span className="text-gray-500">商流区分</span>
-                <span className="font-medium">{FLOW_TYPE_LABELS[project.flow_type as keyof typeof FLOW_TYPE_LABELS] ?? project.flow_type}</span>
+          {readOnly ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h2 className="text-sm font-semibold text-gray-500 mb-3">商流情報</h2>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500">商流区分</span>
+                  <span className="font-medium">{FLOW_TYPE_LABELS[project.flow_type as keyof typeof FLOW_TYPE_LABELS] ?? project.flow_type}</span>
+                </div>
+                {project.flow_detail && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">商流詳細</span>
+                    <span className="font-medium">{project.flow_detail}</span>
+                  </div>
+                )}
+                {project.client_name && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">顧客・発注者</span>
+                    <span className="font-medium">{project.client_name}</span>
+                  </div>
+                )}
+                {project.referrer_name && (
+                  <div className="flex justify-between border-b border-gray-100 pb-2">
+                    <span className="text-gray-500">紹介者</span>
+                    <span className="font-medium">{project.referrer_name}</span>
+                  </div>
+                )}
               </div>
-              {project.client_name && (
-                <div className="flex justify-between border-b border-gray-100 pb-2">
-                  <span className="text-gray-500">顧客・発注者</span>
-                  <span className="font-medium">{project.client_name}</span>
-                </div>
-              )}
-              {project.referrer_name && (
-                <div className="flex justify-between border-b border-gray-100 pb-2">
-                  <span className="text-gray-500">紹介者</span>
-                  <span className="font-medium">{project.referrer_name}</span>
-                </div>
-              )}
             </div>
-          </div>
+          ) : (
+            <FlowEditor
+              projectId={project.id}
+              flowType={project.flow_type}
+              flowDetail={project.flow_detail ?? ''}
+              isLocked={project.is_locked}
+            />
+          )}
 
           {/* 会社/チーム負担 */}
           {!readOnly && (

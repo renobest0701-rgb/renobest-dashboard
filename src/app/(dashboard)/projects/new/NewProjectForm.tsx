@@ -2,7 +2,22 @@
 
 import { useActionState, useState } from 'react'
 import { createProject } from '../actions'
-import { FLOW_TYPE_LABELS } from '@/types'
+import { FLOW_TYPE_LABELS, type FlowType } from '@/types'
+
+function getFlowDetailPlaceholder(flowType: FlowType): string {
+  const map: Partial<Record<FlowType, string>> = {
+    referral:             '紹介者名・紹介元',
+    general_contractor:   '元請会社名',
+    realty_mediation:     '仲介会社名',
+    seller:               '売主名',
+    new_build_consignment:'販売委託元',
+    vr_consignment:       '制作委託元',
+    joint:                '共同会社名',
+    ad_agency:            '広告代理店名',
+    internal:             '社内部門・担当',
+  }
+  return map[flowType] ?? '詳細・備考'
+}
 
 interface Department {
   id: string
@@ -11,6 +26,7 @@ interface Department {
 
 export function NewProjectForm({ departments }: { departments: Department[] }) {
   const [showDetail, setShowDetail] = useState(false)
+  const [flowType, setFlowType] = useState<FlowType>('direct')
   const [state, action, pending] = useActionState(
     async (_prev: { error?: string } | null, formData: FormData) => {
       const result = await createProject(formData)
@@ -69,13 +85,21 @@ export function NewProjectForm({ departments }: { departments: Department[] }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">商流区分</label>
         <select
           name="flow_type"
-          defaultValue="direct"
+          value={flowType}
+          onChange={(e) => setFlowType(e.target.value as FlowType)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {Object.entries(FLOW_TYPE_LABELS).map(([v, l]) => (
             <option key={v} value={v}>{l}</option>
           ))}
         </select>
+        <div className="mt-2">
+          <input
+            name="flow_detail"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder={getFlowDetailPlaceholder(flowType)}
+          />
+        </div>
       </div>
 
       {/* 金額 */}
