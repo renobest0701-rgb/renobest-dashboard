@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, FolderOpen, Building2, Globe,
   Users, Settings, CheckSquare, History,
-  TrendingUp, Bell, DollarSign, Upload, KeyRound, HelpCircle, PhoneIncoming
+  TrendingUp, Bell, DollarSign, Upload, KeyRound, HelpCircle, PhoneIncoming,
+  UserCheck, ListTodo, RefreshCw, Home, FileText
 } from 'lucide-react'
 import type { AuthUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,15 @@ const navGroups: NavGroup[] = [
       { href: '/projects',      label: '案件一覧',  icon: <FolderOpen className="w-4 h-4" /> },
       { href: '/notifications', label: '通知',      icon: <Bell className="w-4 h-4" /> },
       { href: '/inquiry',       label: '反響・接客入力', icon: <PhoneIncoming className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'CRM',
+    items: [
+      { href: '/customers',        label: '顧客管理',   icon: <UserCheck className="w-4 h-4" /> },
+      { href: '/tasks',            label: 'ToDo管理',   icon: <ListTodo className="w-4 h-4" /> },
+      { href: '/properties',       label: '物件管理',   icon: <Home className="w-4 h-4" /> },
+      { href: '/admin/google-sync', label: 'Google連携', icon: <RefreshCw className="w-4 h-4" />, roles: ['manager','accounting','executive'] },
     ],
   },
   {
@@ -58,6 +68,8 @@ const navGroups: NavGroup[] = [
   {
     label: 'システム',
     items: [
+      { href: '/admin/proposal',      label: '提案書生成',       icon: <FileText className="w-4 h-4" />,   roles: ['manager','accounting','executive'] },
+      { href: '/admin/google-sync',  label: 'Google連携設定',   icon: <RefreshCw className="w-4 h-4" />, roles: ['accounting','executive'] },
       { href: '/admin/import',       label: 'CSVインポート',   icon: <Upload className="w-4 h-4" />,    roles: ['accounting','executive'] },
       { href: '/admin/line',         label: 'LINE通知設定',     icon: <Bell className="w-4 h-4" />,      roles: ['accounting','executive'] },
       { href: '/admin/credentials',  label: 'サービス管理',     icon: <KeyRound className="w-4 h-4" />,  roles: ['executive'] },
