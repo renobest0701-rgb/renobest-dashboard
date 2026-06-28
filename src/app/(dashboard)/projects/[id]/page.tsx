@@ -173,7 +173,7 @@ export default async function ProjectDetailPage({
           {readOnly ? (
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h2 className="text-sm font-semibold text-gray-500 mb-3">商流情報</h2>
-              <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between border-b border-gray-100 pb-2">
                   <span className="text-gray-500">商流区分</span>
                   <span className="font-medium">{FLOW_TYPE_LABELS[project.flow_type as keyof typeof FLOW_TYPE_LABELS] ?? project.flow_type}</span>
@@ -203,6 +203,8 @@ export default async function ProjectDetailPage({
               projectId={project.id}
               flowType={project.flow_type}
               flowDetail={project.flow_detail ?? ''}
+              clientName={project.client_name ?? ''}
+              referrerName={project.referrer_name ?? ''}
               isLocked={project.is_locked}
             />
           )}

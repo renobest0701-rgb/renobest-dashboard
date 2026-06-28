@@ -23,20 +23,24 @@ interface Props {
   projectId: string
   flowType: string
   flowDetail: string
+  clientName: string
+  referrerName: string
   isLocked: boolean
 }
 
-export function FlowEditor({ projectId, flowType, flowDetail, isLocked }: Props) {
+export function FlowEditor({ projectId, flowType, flowDetail, clientName, referrerName, isLocked }: Props) {
   const [editing, setEditing] = useState(false)
   const [currentFlowType, setCurrentFlowType] = useState<FlowType>(flowType as FlowType)
   const [currentDetail, setCurrentDetail] = useState(flowDetail)
+  const [currentClientName, setCurrentClientName] = useState(clientName)
+  const [currentReferrerName, setCurrentReferrerName] = useState(referrerName)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const handleSave = async () => {
     setSaving(true)
     setError('')
-    const result = await updateFlowInfo(projectId, currentFlowType, currentDetail)
+    const result = await updateFlowInfo(projectId, currentFlowType, currentDetail, currentClientName, currentReferrerName)
     setSaving(false)
     if (result?.error) {
       setError(result.error)
@@ -48,6 +52,8 @@ export function FlowEditor({ projectId, flowType, flowDetail, isLocked }: Props)
   const handleCancel = () => {
     setCurrentFlowType(flowType as FlowType)
     setCurrentDetail(flowDetail)
+    setCurrentClientName(clientName)
+    setCurrentReferrerName(referrerName)
     setEditing(false)
     setError('')
   }
@@ -89,6 +95,24 @@ export function FlowEditor({ projectId, flowType, flowDetail, isLocked }: Props)
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">顧客・発注者名</label>
+            <input
+              value={currentClientName}
+              onChange={(e) => setCurrentClientName(e.target.value)}
+              placeholder="顧客・発注元会社名"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">紹介者</label>
+            <input
+              value={currentReferrerName}
+              onChange={(e) => setCurrentReferrerName(e.target.value)}
+              placeholder="紹介者名"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-2">
             <button
@@ -107,7 +131,7 @@ export function FlowEditor({ projectId, flowType, flowDetail, isLocked }: Props)
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between border-b border-gray-100 pb-2">
             <span className="text-gray-500">商流区分</span>
             <span className="font-medium">{FLOW_TYPE_LABELS[currentFlowType] ?? currentFlowType}</span>
@@ -116,6 +140,18 @@ export function FlowEditor({ projectId, flowType, flowDetail, isLocked }: Props)
             <div className="flex justify-between border-b border-gray-100 pb-2">
               <span className="text-gray-500">商流詳細</span>
               <span className="font-medium">{currentDetail}</span>
+            </div>
+          )}
+          {currentClientName && (
+            <div className="flex justify-between border-b border-gray-100 pb-2">
+              <span className="text-gray-500">顧客・発注者</span>
+              <span className="font-medium">{currentClientName}</span>
+            </div>
+          )}
+          {currentReferrerName && (
+            <div className="flex justify-between border-b border-gray-100 pb-2">
+              <span className="text-gray-500">紹介者</span>
+              <span className="font-medium">{currentReferrerName}</span>
             </div>
           )}
         </div>

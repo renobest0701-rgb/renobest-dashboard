@@ -229,7 +229,9 @@ export async function updateProjectFreeFields(
 export async function updateFlowInfo(
   projectId: string,
   flowType: string,
-  flowDetail: string
+  flowDetail: string,
+  clientName: string,
+  referrerName: string
 ) {
   const user = await requireAuth()
   if (isNonSales(user)) return { error: '閲覧専用アカウントは編集できません' }
@@ -237,7 +239,7 @@ export async function updateFlowInfo(
 
   const { error } = await supabase
     .from('projects')
-    .update({ flow_type: flowType, flow_detail: flowDetail })
+    .update({ flow_type: flowType, flow_detail: flowDetail, client_name: clientName || null, referrer_name: referrerName || null })
     .eq('id', projectId)
     .not('is_locked', 'eq', true)
 
