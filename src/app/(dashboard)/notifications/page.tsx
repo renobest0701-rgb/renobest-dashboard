@@ -1,4 +1,4 @@
-import { requireAuth } from '@/lib/auth'
+import { requireAuth, isAdminOrExecutive } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Bell, CheckCircle2, XCircle } from 'lucide-react'
 
@@ -31,6 +31,9 @@ export default async function NotificationsPage({
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+  // 管理者・役員は全件、それ以外は担当案件 or 同部門のみDB側で絞り込む
+  const isAdmin = isAdminOrExecutive(user)
+
   let query = supabase
     .from('line_notification_logs')
     .select(`
@@ -44,20 +47,18 @@ export default async function NotificationsPage({
     .gte('created_at', thirtyDaysAgo.toISOString())
     .eq('result', 'success')
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(200)
+
+  if (!isAdmin) {
+    const filters = [`created_by.eq.${user.id}`]
+    if (user.departmentId) filters.push(`department_id.eq.${user.departmentId}`)
+    query = query.or(filters.join(','), { referencedTable: 'projects' })
+  }
 
   if (params.type) query = query.eq('notification_type', params.type)
 
   const { data: logs } = await query
-
-  // 自分に関係するログのみ絞り込み（担当者 or 同部門）
-  const filtered = (logs ?? []).filter((log) => {
-    const project = (log as any).project
-    return (
-      project?.created_by === user.id ||
-      project?.department_id === user.departmentId
-    )
-  })
+  const filtered = logs ?? []
 
   const grouped = groupByDate(filtered)
 
