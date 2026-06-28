@@ -7,10 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{--N:#1D2A44;--G:#C19F6E;--CR:#F8F5EF;}
-body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-direction:column;align-items:center;gap:24px;padding:72px 20px 40px;}
+:root{--N:#1D2A44;--G:#C19F6E;--CR:#F8F5EF;--PH-BG:#f7f3ec;}
+body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-direction:column;align-items:center;gap:24px;padding:68px 20px 40px;}
 
-.toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--N);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,.3);font-family:'Noto Sans JP',sans-serif;}
+/* ─── TOOLBAR ─── */
+.toolbar{position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--N);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,.3);}
 .tb-left{display:flex;align-items:center;gap:10px;}
 .lang-btns{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:8px;padding:4px;}
 .lang-btn{padding:5px 12px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;background:transparent;color:rgba(255,255,255,.6);transition:all .15s;}
@@ -20,37 +21,89 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
 .tb-right button{padding:7px 18px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
 .btn-print{background:#fff;color:var(--N);}
 
-.page{width:277mm;min-height:190mm;position:relative;overflow:hidden;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.18);padding:8mm 9mm 13mm;}
+/* ─── PAGE BASE (A4 landscape = 297 × 210mm) ─── */
+.page{
+  width:297mm;height:210mm;
+  position:relative;overflow:hidden;
+  background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.18);
+  padding:7mm 9mm 11mm;
+  break-after:page;page-break-after:always;
+}
+.page:last-child{break-after:avoid;page-break-after:avoid;}
 
-.area-photo-wrap{position:relative;overflow:hidden;border-radius:5px;}
-.area-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
-.area-caption{position:absolute;bottom:0;left:0;right:0;background:rgba(29,42,68,.72);padding:2px 4px;font-size:5.5pt;color:rgba(255,255,255,.95);text-align:center;font-weight:700;}
-
-.ph{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;border-bottom:1.5px solid #C19F6E;margin-bottom:7px;}
+/* ─── HEADER ─── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:4px;border-bottom:1.5px solid #C19F6E;margin-bottom:5px;}
 .ph-lbl{font-size:6.5pt;color:#C19F6E;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1px;}
 .ph-name{font-size:11pt;color:#1D2A44;font-weight:900;font-family:'Shippori Mincho',serif;}
-.ph-r{text-align:right;}
+.ph-r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
 .ph-agent{font-size:7.5pt;color:#1D2A44;font-weight:700;}
-.ph-pg{font-size:7pt;color:#aaa;}
-.pf{position:absolute;bottom:0;left:0;right:0;padding:4px 9mm;background:#F8F5EF;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;}
-.pf-addr{font-size:6.5pt;color:#888;}
+.ph-company{font-size:6pt;color:#888;font-weight:600;}
+.ph-tel-mini{font-size:6pt;color:#C19F6E;font-weight:700;}
+.ph-pg{font-size:6.5pt;color:#aaa;margin-top:2px;}
+
+/* ─── FOOTER ─── */
+.pf{position:absolute;bottom:0;left:0;right:0;height:9mm;padding:0 9mm;background:#F8F5EF;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;}
+.pf-addr{font-size:6.5pt;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;}
 .pf-brand{font-size:8.5pt;font-weight:900;letter-spacing:.16em;color:#C19F6E;}
-.pf-pg{font-size:7pt;color:#C19F6E;font-weight:700;}
+.pf-pg{font-size:7pt;color:#C19F6E;font-weight:700;white-space:nowrap;}
+
+/* ─── COMMON ─── */
 .sec-ttl{font-size:6pt;color:#C19F6E;font-weight:900;letter-spacing:.1em;text-transform:uppercase;border-bottom:1.5px solid #C19F6E;padding-bottom:2px;margin-bottom:3px;}
 .ck{color:#C19F6E;font-weight:900;flex-shrink:0;}
 .fac-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px 5px;}
 .fac-item{display:flex;gap:4px;font-size:6.5pt;color:#1D2A44;align-items:baseline;padding:1px 0;}
+.area-photo-wrap{position:relative;overflow:hidden;border-radius:5px;}
+.area-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.area-caption{position:absolute;bottom:0;left:0;right:0;background:rgba(29,42,68,.72);padding:2px 4px;font-size:5.5pt;color:rgba(255,255,255,.95);text-align:center;font-weight:700;}
 
-/* ═══ P1 ═══ */
-.p1-layout{display:grid;grid-template-columns:minmax(0,38%) minmax(0,62%);gap:9px;height:163mm;}
-.p1-photo{position:relative;height:163mm;border-radius:7px;overflow:hidden;}
-.p1-photo img{width:100%;height:100%;object-fit:cover;display:block;}
-.p1-price-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(29,42,68,.96) 0%,rgba(29,42,68,.82) 55%,transparent 100%);padding:18px 12px 10px;}
+/* ═══════════════════════════════════════════
+   PAGE 1 ─ 自動レイアウト対応
+   ヘッダー≈16mm、available≈175mm → layout height=157mm
+═══════════════════════════════════════════ */
+.p1-layout{
+  display:grid;gap:9px;height:157mm;
+}
+/* デフォルト：横長 */
+.p1-layout.is-landscape{grid-template-columns:minmax(0,40%) minmax(0,60%);}
+/* 縦長：写真列を狭め、情報列を広げる */
+.p1-layout.is-portrait {grid-template-columns:minmax(0,27%) minmax(0,73%);}
+/* 正方形 */
+.p1-layout.is-square   {grid-template-columns:minmax(0,35%) minmax(0,65%);}
+
+/* 写真コンテナ（共通） */
+.p1-photo{
+  position:relative;height:157mm;
+  border-radius:7px;overflow:hidden;
+  background:var(--PH-BG); /* 余白が出るケース用ベース背景 */
+}
+/* 横長・正方形：coverで迫力 */
+.p1-layout.is-landscape .p1-photo,
+.p1-layout.is-square    .p1-photo{background:transparent;}
+.p1-layout.is-landscape .p1-photo img,
+.p1-layout.is-square    .p1-photo img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+/* 縦長：containで歪ませず、画像を下寄せで価格帯との干渉を自然に */
+.p1-layout.is-portrait .p1-photo img{
+  width:100%;height:100%;
+  object-fit:contain;object-position:bottom center;
+  display:block;
+}
+
+/* 価格帯：縦長では薄くして馴染ませる */
+.p1-price-bar{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,rgba(29,42,68,.96) 0%,rgba(29,42,68,.82) 55%,transparent 100%);
+  padding:18px 12px 10px;
+}
+.p1-layout.is-portrait .p1-price-bar{
+  background:linear-gradient(to top,rgba(29,42,68,.88) 0%,rgba(29,42,68,.6) 45%,transparent 100%);
+}
 .p1-price-label{font-size:6pt;color:#C19F6E;font-weight:900;letter-spacing:.12em;margin-bottom:2px;}
 .p1-price-val{font-size:20pt;color:#C19F6E;font-weight:900;font-family:'DM Mono',monospace;line-height:1;}
 .p1-price-note{font-size:6.5pt;color:rgba(255,255,255,.55);margin-top:1px;}
-.p1-right{display:flex;flex-direction:column;gap:5px;overflow:hidden;}
 
+.p1-right{display:flex;flex-direction:column;gap:5px;height:157mm;overflow:hidden;}
 .p1-catch{font-size:11pt;color:#1D2A44;font-weight:900;font-family:'Shippori Mincho',serif;line-height:1.35;}
 .p1-sub{font-size:7pt;color:#555;line-height:1.5;margin-top:2px;}
 
@@ -61,56 +114,129 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
 .stat-u{font-size:7.5pt;color:#C19F6E;margin-left:1px;}
 .stat-l{font-size:5.5pt;color:#aaa;margin-top:1px;}
 .stat-e{font-size:5pt;color:#C19F6E;font-weight:700;}
-.ov-row{display:grid;grid-template-columns:58px 1fr;gap:0 5px;padding:2px 0 2px 6px;border-bottom:1px solid #f0ece3;align-items:baseline;}
+.ov-row{display:grid;grid-template-columns:58px 1fr;gap:0 5px;padding:2.5px 0 2.5px 6px;border-bottom:1px solid #f0ece3;align-items:baseline;}
 .ov-l{font-size:6.5pt;color:#888;font-weight:600;}
 .ov-v{font-size:6.5pt;color:#1D2A44;font-weight:500;line-height:1.35;}
 .p1-fac-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 
-/* ═══ P2 ═══ */
-.p2-lifestyle{height:130mm;width:100%;object-fit:cover;display:block;border-radius:7px;}
-.stage-box{background:#1D2A44;border-radius:6px;padding:7px 10px;flex-shrink:0;}
-.stage-kicker{font-size:5.5pt;color:#C19F6E;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
-.stage-title{font-size:8pt;color:#fff;font-weight:700;font-family:'Shippori Mincho',serif;margin-bottom:4px;line-height:1.3;}
-.stage-body{font-size:6.5pt;color:rgba(255,255,255,.75);line-height:1.55;}
+/* ═══════════════════════════════════════════
+   PAGE 2 ─ 自動レイアウト対応
+   grid(130mm) + gap(5mm) + summary(27mm) = 162mm < 175mm
+═══════════════════════════════════════════ */
+.p2-main{
+  display:grid;gap:9px;height:130mm;margin-bottom:5px;
+}
+.p2-main.is-landscape{grid-template-columns:minmax(0,44%) minmax(0,56%);}
+.p2-main.is-portrait {grid-template-columns:minmax(0,28%) minmax(0,72%);}
+.p2-main.is-square   {grid-template-columns:minmax(0,38%) minmax(0,62%);}
 
+.p2-photo-wrap{
+  height:130mm;border-radius:7px;overflow:hidden;
+  background:var(--PH-BG);
+}
+.p2-main.is-landscape .p2-photo-wrap,
+.p2-main.is-square    .p2-photo-wrap{background:transparent;}
+
+.p2-photo-wrap img{
+  width:100%;height:100%;display:block;border-radius:7px;
+}
+.p2-main.is-landscape .p2-photo-wrap img,
+.p2-main.is-square    .p2-photo-wrap img{object-fit:cover;}
+.p2-main.is-portrait  .p2-photo-wrap img{
+  object-fit:contain;object-position:center center;
+}
+
+.p2-right{display:flex;flex-direction:column;gap:4px;height:130mm;overflow:hidden;}
+.stage-box{background:#1D2A44;border-radius:6px;padding:6px 9px;flex-shrink:0;}
+.stage-kicker{font-size:5pt;color:#C19F6E;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px;}
+.stage-title{font-size:7pt;color:#fff;font-weight:700;font-family:'Shippori Mincho',serif;margin-bottom:3px;line-height:1.3;}
+.stage-body{font-size:6pt;color:rgba(255,255,255,.75);line-height:1.55;}
 .area-lbl{font-size:6pt;color:#C19F6E;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.rec-header{font-size:8pt;color:#1D2A44;font-weight:700;font-family:'Shippori Mincho',serif;margin-bottom:3px;flex-shrink:0;}
+.rec-cards{display:flex;flex-direction:column;gap:3px;list-style:none;padding:0;flex:1;min-height:0;overflow:hidden;}
+.rec-card,.rec-cards li{display:flex;gap:7px;align-items:flex-start;padding:5px 8px;background:#fff;border:1px solid #ede9df;border-left:3px solid #C19F6E;border-radius:0 5px 5px 0;}
+.rec-num{font-size:11pt;color:#C19F6E;font-weight:900;font-family:'DM Mono',monospace;line-height:1;flex-shrink:0;min-width:20px;}
+.rec-hd{font-size:7.5pt;color:#1D2A44;font-weight:700;line-height:1.3;margin-bottom:1px;}
+.rec-desc{font-size:6.5pt;color:#555;line-height:1.5;}
+.p2-area-row{flex-shrink:0;}
+.p2-area-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.p2-area-photo{height:18mm;}
 
-.rec-header{font-size:8pt;color:#1D2A44;font-weight:700;font-family:'Shippori Mincho',serif;margin-bottom:4px;}
-.rec-cards{display:flex;flex-direction:column;gap:5px;list-style:none;padding:0;}
-.rec-card,.rec-cards li{display:flex;gap:7px;align-items:flex-start;padding:7px 9px;background:#fff;border:1px solid #ede9df;border-left:3px solid #C19F6E;border-radius:0 5px 5px 0;}
-.rec-num{font-size:12pt;color:#C19F6E;font-weight:900;font-family:'DM Mono',monospace;line-height:1;flex-shrink:0;min-width:20px;}
-.rec-hd{font-size:8pt;color:#1D2A44;font-weight:700;line-height:1.35;margin-bottom:2px;}
-.rec-desc{font-size:7pt;color:#555;line-height:1.55;}
-
-.summary{background:#1D2A44;border-radius:7px;padding:9px 18px;display:flex;align-items:center;justify-content:space-between;}
-.sum-lbl{font-size:6.5pt;color:#C19F6E;font-weight:900;letter-spacing:.1em;margin-bottom:3px;}
-.sum-copy{font-size:12pt;color:#fff;font-weight:700;font-family:'Shippori Mincho',serif;line-height:1.4;}
+.summary{background:#1D2A44;border-radius:7px;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;}
+.sum-lbl{font-size:6.5pt;color:#C19F6E;font-weight:900;letter-spacing:.1em;margin-bottom:2px;}
+.sum-copy{font-size:11pt;color:#fff;font-weight:700;font-family:'Shippori Mincho',serif;line-height:1.35;}
 .sum-r{text-align:right;border-left:1px solid rgba(255,255,255,.15);padding-left:16px;flex-shrink:0;}
 .sum-sub{font-size:7pt;color:rgba(255,255,255,.5);}
 .sum-v{font-size:7.5pt;color:#fff;}
 .sum-ag{font-size:7.5pt;color:#C19F6E;margin-top:3px;font-weight:700;}
 
-/* ═══ P3 ═══ */
-.p3-grid{display:grid;grid-template-columns:minmax(0,58%) minmax(0,42%);gap:9px;height:132mm;}
-.fp-wrap{background:#F8F5EF;border-radius:7px;border:1px solid #ede9df;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:6px;}
-.fp-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;}
-.rooms-wrap{background:#F8F5EF;border-radius:6px;padding:7px 9px;border:1px solid #ede9df;}
-.room-row{display:grid;grid-template-columns:1fr auto;gap:0 7px;padding:3px 0;border-bottom:1px dotted #ddd;align-items:baseline;}
-.room-n{font-size:8pt;color:#1D2A44;font-weight:700;}
-.room-note{font-size:7pt;color:#888;margin-left:5px;}
-.room-s{font-size:9.5pt;color:#C19F6E;font-weight:900;font-family:'DM Mono',monospace;white-space:nowrap;}
-.eq-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 7px;}
-.eq-item{display:flex;gap:4px;font-size:7.5pt;color:#1D2A44;padding:1px 0;align-items:baseline;}
-.plan-hl{background:#1D2A44;border-radius:6px;padding:9px 11px;}
-.plan-hl-l{font-size:6.5pt;color:#C19F6E;font-weight:900;letter-spacing:.1em;margin-bottom:4px;}
-.plan-hl-t{font-size:8.5pt;color:#fff;line-height:1.6;font-weight:500;}
+/* ═══════════════════════════════════════════
+   PAGE 3 ─ 自動レイアウト対応
+   grid(138mm) + gap(4mm) + contact(28mm) = 170mm < 175mm
+   間取り図は縦長がデフォルト
+═══════════════════════════════════════════ */
+.p3-grid{
+  display:grid;gap:9px;height:138mm;
+}
+/* 縦長間取り：左を少し狭めて右情報を広げる */
+.p3-grid.is-portrait {grid-template-columns:minmax(0,46%) minmax(0,54%);}
+/* 横長間取り：左広め */
+.p3-grid.is-landscape{grid-template-columns:minmax(0,58%) minmax(0,42%);}
+/* 正方形 */
+.p3-grid.is-square   {grid-template-columns:minmax(0,52%) minmax(0,48%);}
 
+.fp-wrap{
+  background:#F8F5EF;border-radius:7px;border:1px solid #ede9df;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  padding:6px;height:100%;
+}
+.fp-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;display:block;}
+
+.p3-right{display:flex;flex-direction:column;gap:6px;height:100%;overflow:hidden;}
+.rooms-wrap{background:#F8F5EF;border-radius:6px;padding:6px 9px;border:1px solid #ede9df;flex-shrink:0;}
+.room-row{display:grid;grid-template-columns:1fr auto;gap:0 7px;padding:2.5px 0;border-bottom:1px dotted #ddd;align-items:baseline;}
+.room-n{font-size:8pt;color:#1D2A44;font-weight:700;}
+.room-s{font-size:9pt;color:#C19F6E;font-weight:900;font-family:'DM Mono',monospace;white-space:nowrap;}
+.eq-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 7px;}
+.eq-item{display:flex;gap:4px;font-size:7pt;color:#1D2A44;padding:1px 0;align-items:baseline;}
+.plan-hl{background:#1D2A44;border-radius:6px;padding:9px 11px;flex:1;min-height:0;}
+.plan-hl-l{font-size:6.5pt;color:#C19F6E;font-weight:900;letter-spacing:.1em;margin-bottom:5px;}
+.plan-hl-t{font-size:8pt;color:#fff;line-height:1.65;font-weight:400;}
+
+/* ─── CONTACT BLOCK ─── */
+.contact-block{margin-top:4px;border:1px solid #e8e2d6;border-left:3px solid #C19F6E;border-radius:6px;overflow:hidden;flex-shrink:0;}
+.contact-hd{background:#1D2A44;padding:3.5px 12px;font-size:5.5pt;color:#C19F6E;font-weight:900;letter-spacing:.14em;text-transform:uppercase;}
+.contact-body{background:#F8F5EF;padding:7px 12px;display:grid;grid-template-columns:1fr auto;gap:0 16px;align-items:start;}
+.contact-company{font-size:9pt;color:#1D2A44;font-weight:900;font-family:'Shippori Mincho',serif;margin-bottom:4px;}
+.contact-rows{display:flex;flex-direction:column;gap:0;}
+.contact-row{display:grid;grid-template-columns:32px 1fr;gap:0 8px;padding:2px 0;border-bottom:1px dotted #ddd;align-items:baseline;}
+.contact-row:last-child{border-bottom:none;}
+.c-lbl{font-size:6pt;color:#C19F6E;font-weight:900;letter-spacing:.06em;}
+.c-val{font-size:7pt;color:#1D2A44;font-weight:500;}
+.contact-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;}
+.contact-note{font-size:6.5pt;color:#555;line-height:1.7;max-width:130px;text-align:right;border-right:2px solid #C19F6E;padding-right:8px;}
+.contact-qr-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.contact-qr-img{width:18mm;height:18mm;object-fit:contain;border-radius:3px;border:1px solid #e0dbd2;}
+.contact-qr-lbl{font-size:5pt;color:#888;font-weight:700;letter-spacing:.06em;}
+
+/* ═══════════════════════════════════════════
+   PRINT
+═══════════════════════════════════════════ */
 @media print{
-  body{background:#fff;padding:0;gap:0;}
+  html,body{width:297mm;margin:0;padding:0;background:#fff!important;display:block;gap:0;}
   .toolbar{display:none!important;}
-  .page{box-shadow:none;page-break-after:always;}
-  .page:last-child{page-break-after:auto;}
   @page{size:A4 landscape;margin:0;}
+  .page{
+    width:297mm!important;height:210mm!important;
+    box-shadow:none!important;margin:0!important;padding:7mm 9mm 11mm!important;
+    break-after:page;page-break-after:always;
+    overflow:hidden!important;display:block;position:relative;
+  }
+  .page:last-child{break-after:avoid!important;page-break-after:avoid!important;}
+  /* レイアウトクラスは印刷時も有効 */
+  .p1-layout.is-landscape,.p2-main.is-landscape{/* inherit screen rules */}
+  .p1-layout.is-portrait,.p2-main.is-portrait{/* inherit screen rules */}
+  .p1-layout.is-square,.p2-main.is-square{/* inherit screen rules */}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
 }
 </style>
@@ -127,11 +253,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
     </div>
   </div>
   <div class="tb-right">
-    <button class="btn-print" onclick="window.print()" data-tb="print">🖨 PDF印刷</button>
+    <!-- doPrint()で画像読み込み完了後に印刷 -->
+    <button class="btn-print" onclick="doPrint()" data-tb="print">🖨 PDF印刷</button>
   </div>
 </div>
 
-<!-- ══════════════════════ PAGE 1 ══════════════════════ -->
+<!-- ══════════════════════════════════════ PAGE 1 ══════════════════════════════════════ -->
 <div class="page">
   <div class="ph">
     <div>
@@ -139,14 +266,17 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
       <div class="ph-name" data-key="prop_name">{{property_name}}</div>
     </div>
     <div class="ph-r">
-      <div class="ph-agent" data-key="agent">担当者名</div>
+      <div class="ph-agent">{{agent_display}}</div>
+      <div class="ph-company">{{company_name}}</div>
+      <div class="ph-tel-mini"><span data-key="contact_l_tel">TEL</span>: {{tel}}</div>
       <div class="ph-pg">Page 1 of 3</div>
     </div>
   </div>
 
-  <div class="p1-layout">
+  <!-- data-layout-container でJS判定のターゲット。デフォルトis-landscapeで描画ブレ防止 -->
+  <div class="p1-layout is-landscape" data-layout-container>
     <div class="p1-photo">
-      <img id="img-hero" src="{{img_hero}}" alt="外観">
+      <img id="img-hero" src="{{img_hero}}" alt="外観" data-auto-layout-image>
       <div class="p1-price-bar">
         <div class="p1-price-label">PRICE</div>
         <div class="p1-price-val" data-key="price_val">{{price}}</div>
@@ -155,7 +285,6 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
     </div>
 
     <div class="p1-right">
-
       <div>
         <div class="p1-catch" data-key="catch">{{ja_catchcopy}}</div>
         <div class="p1-sub" data-key="sub">{{subtitle}}</div>
@@ -164,9 +293,18 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
       <div>
         <div class="stats-lbl" data-key="stats_lbl">規模・建築 / ARCHITECTURE &amp; FACILITIES</div>
         <div class="stats">
-          <div class="stat"><div><span class="stat-v" data-key="stat_units">{{total_units}}</span><span class="stat-u">戸</span></div><div class="stat-l" data-key="stat1_l">総戸数</div><div class="stat-e">Total Units</div></div>
-          <div class="stat"><div><span class="stat-v" data-key="stat_area">{{area}}</span></div><div class="stat-l" data-key="stat2_l">専有面積</div><div class="stat-e">Floor Area</div></div>
-          <div class="stat"><div><span class="stat-v" data-key="stat_floor">{{floor}}</span><span class="stat-u">F</span></div><div class="stat-l" data-key="stat3_l">所在階</div><div class="stat-e">High Floor</div></div>
+          <div class="stat">
+            <div><span class="stat-v" data-key="stat_units">{{total_units}}</span><span class="stat-u">戸</span></div>
+            <div class="stat-l" data-key="stat1_l">総戸数</div><div class="stat-e">Total Units</div>
+          </div>
+          <div class="stat">
+            <div><span class="stat-v" data-key="stat_area">{{area}}</span></div>
+            <div class="stat-l" data-key="stat2_l">専有面積</div><div class="stat-e">Floor Area</div>
+          </div>
+          <div class="stat">
+            <div><span class="stat-v" data-key="stat_floor">{{floor}}</span><span class="stat-u">F</span></div>
+            <div class="stat-l" data-key="stat3_l">所在階</div><div class="stat-e">High Floor</div>
+          </div>
         </div>
       </div>
 
@@ -195,7 +333,6 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
           <div class="fac-grid" id="facilities-grid">{{facilities}}</div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -206,7 +343,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
   </div>
 </div>
 
-<!-- ══════════════════════ PAGE 2 ══════════════════════ -->
+<!-- ══════════════════════════════════════ PAGE 2 ══════════════════════════════════════ -->
 <div class="page">
   <div class="ph">
     <div>
@@ -214,46 +351,45 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
       <div class="ph-name" data-key="prop_name">{{property_name}}</div>
     </div>
     <div class="ph-r">
-      <div class="ph-agent" data-key="agent">担当者名</div>
+      <div class="ph-agent">{{agent_display}}</div>
+      <div class="ph-company">{{company_name}}</div>
+      <div class="ph-tel-mini"><span data-key="contact_l_tel">TEL</span>: {{tel}}</div>
       <div class="ph-pg">Page 2 of 3</div>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:minmax(0,42%) minmax(0,58%);gap:9px;height:130mm;margin-bottom:4px;">
-
-    <div style="height:130mm;border-radius:7px;overflow:hidden;flex-shrink:0;">
-      <img id="img-lifestyle" src="{{img_lifestyle}}" alt="ライフスタイル" class="p2-lifestyle">
+  <div class="p2-main is-landscape" data-layout-container>
+    <div class="p2-photo-wrap">
+      <img id="img-lifestyle" src="{{img_lifestyle}}" alt="ライフスタイル" data-auto-layout-image>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:5px;overflow:hidden;">
-
+    <div class="p2-right">
       <div class="rec-header" data-key="rec_ttl">{{recommend_comment}}</div>
       <ul class="rec-cards" data-key="recommend_points">{{recommend_points}}</ul>
 
-      <div class="stage-box" style="padding:6px 9px;">
-        <div class="stage-kicker" style="font-size:5pt;" data-key="stage_kicker">PROPERTY HIGHLIGHT</div>
-        <div class="stage-title" style="font-size:7pt;" data-key="stage_title">{{stage_title}}</div>
-        <div class="stage-body" style="font-size:6pt;" data-key="stage_body">{{ja_stage_body}}</div>
+      <div class="stage-box">
+        <div class="stage-kicker" data-key="stage_kicker">PROPERTY HIGHLIGHT</div>
+        <div class="stage-title" data-key="stage_title">{{stage_title}}</div>
+        <div class="stage-body" data-key="stage_body">{{ja_stage_body}}</div>
       </div>
 
-      <div style="margin-top:auto;">
+      <div class="p2-area-row">
         <div class="area-lbl" data-key="area_lbl">エリア環境 / AREA HIGHLIGHTS</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
-          <div class="area-photo-wrap" style="height:20mm;border-radius:5px;">
+        <div class="p2-area-grid">
+          <div class="area-photo-wrap p2-area-photo">
             <img id="img-area0" src="{{img_area0}}" alt="エリア1">
             <div class="area-caption" data-key="area_cap0">エリア写真①</div>
           </div>
-          <div class="area-photo-wrap" style="height:20mm;border-radius:5px;">
+          <div class="area-photo-wrap p2-area-photo">
             <img id="img-area1" src="{{img_area1}}" alt="エリア2">
             <div class="area-caption" data-key="area_cap1">エリア写真②</div>
           </div>
-          <div class="area-photo-wrap" style="height:20mm;border-radius:5px;">
+          <div class="area-photo-wrap p2-area-photo">
             <img id="img-area2" src="{{img_area2}}" alt="エリア3">
             <div class="area-caption" data-key="area_cap2">エリア写真③</div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -265,7 +401,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
     <div class="sum-r">
       <div class="sum-sub" data-key="sum_torihiki">取引態様・仲介手数料</div>
       <div class="sum-v" data-key="sum_val">売買価格の3%＋6万円（別途消費税）</div>
-      <div class="sum-ag" data-key="agent_name">担当: —</div>
+      <div class="sum-ag">{{agent_display}} — {{company_name}}</div>
     </div>
   </div>
 
@@ -276,7 +412,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
   </div>
 </div>
 
-<!-- ══════════════════════ PAGE 3 ══════════════════════ -->
+<!-- ══════════════════════════════════════ PAGE 3 ══════════════════════════════════════ -->
 <div class="page">
   <div class="ph">
     <div>
@@ -284,16 +420,20 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
       <div class="ph-name" data-key="prop_name">{{property_name}}</div>
     </div>
     <div class="ph-r">
-      <div class="ph-agent" data-key="agent">担当者名</div>
+      <div class="ph-agent">{{agent_display}}</div>
+      <div class="ph-company">{{company_name}}</div>
+      <div class="ph-tel-mini"><span data-key="contact_l_tel">TEL</span>: {{tel}}</div>
       <div class="ph-pg">Page 3 of 3</div>
     </div>
   </div>
 
-  <div class="p3-grid">
+  <!-- 間取りはデフォルトis-portrait -->
+  <div class="p3-grid is-portrait" data-layout-container>
     <div class="fp-wrap">
-      <img id="img-floorplan" src="{{img_floorplan}}" alt="間取り図" style="max-width:100%;max-height:100%;object-fit:contain;">
+      <img id="img-floorplan" src="{{img_floorplan}}" alt="間取り図" data-auto-layout-image>
     </div>
-    <div style="display:flex;flex-direction:column;gap:7px;overflow:hidden;">
+
+    <div class="p3-right">
       <div>
         <div class="sec-ttl" data-key="rooms_lbl">部屋構成 / ROOMS</div>
         <div class="rooms-wrap" id="rooms-grid">{{rooms}}</div>
@@ -302,9 +442,48 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
         <div class="sec-ttl" data-key="eq_lbl">主要設備 / EQUIPMENT</div>
         <div class="eq-grid" id="eq-grid2">{{equipment}}</div>
       </div>
-      <div class="plan-hl" style="margin-top:auto;">
+      <div class="plan-hl">
         <div class="plan-hl-l" data-key="plan_lbl">PLAN HIGHLIGHTS</div>
         <div class="plan-hl-t" data-key="plan_txt">{{plan_highlight}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT BLOCK -->
+  <div class="contact-block">
+    <div class="contact-hd" data-key="contact_ttl">CONTACT / お問い合わせ</div>
+    <div class="contact-body">
+      <div class="contact-left">
+        <div class="contact-company">{{company_name}}</div>
+        <div class="contact-rows">
+          <div class="contact-row">
+            <span class="c-lbl" data-key="contact_l_agent">担当</span>
+            <span class="c-val">{{agent_display}}</span>
+          </div>
+          <div class="contact-row">
+            <span class="c-lbl" data-key="contact_l_tel">TEL</span>
+            <span class="c-val">{{tel}}</span>
+          </div>
+          <div class="contact-row">
+            <span class="c-lbl" data-key="contact_l_mail">MAIL</span>
+            <span class="c-val">{{mail}}</span>
+          </div>
+          <div class="contact-row">
+            <span class="c-lbl" data-key="contact_l_web">WEB</span>
+            <span class="c-val">{{web}}</span>
+          </div>
+          <div class="contact-row">
+            <span class="c-lbl" data-key="contact_l_url">URL</span>
+            <span class="c-val">{{inquiry_url}}</span>
+          </div>
+        </div>
+      </div>
+      <div class="contact-right">
+        <div class="contact-note" data-key="contact_note">内見・オンライン説明・詳細資料のご希望は、上記までお気軽にお問い合わせください。</div>
+        <div class="contact-qr-wrap" id="qr-line-wrap">
+          <img class="contact-qr-img" src="{{img_qr_line}}" alt="LINE QR" onerror="this.parentElement.style.display='none'">
+          <div class="contact-qr-lbl" data-key="contact_l_line">LINE</div>
+        </div>
       </div>
     </div>
   </div>
@@ -317,80 +496,96 @@ body{font-family:'Noto Sans JP',sans-serif;background:#d8d3c8;display:flex;flex-
 </div>
 
 <script>
+/* ── 多言語切替 ── */
 const T = {
   ja: {
-    prop_label:'PREMIUM RESIDENCE PROPOSAL', prop_name:'{{property_name}}', agent:'担当者名',
+    prop_label:'PREMIUM RESIDENCE PROPOSAL', prop_name:'{{property_name}}',
     price_val:'{{price}}',
-    catch:'{{ja_catchcopy}}',
-    sub:'{{subtitle}}',
-    stats_lbl:'規模・建築 / ARCHITECTURE &amp; FACILITIES', stat1_l:'総戸数', stat2_l:'専有面積', stat3_l:'所在階',
-    ov_lbl:'物件概要 / PROPERTY OVERVIEW', ov_l_addr:'所在地', ov_l_access:'交通', ov_l_built:'築年月', ov_l_struct:'構造', ov_l_units:'総戸数', ov_l_area:'専有面積', ov_l_layout:'間取り', ov_l_park:'駐車場', ov_l_fee:'月額費用', ov_l_pet:'ペット', ov_l_biz:'事業者',
-    ov_addr:'{{address}}', ov_access:'{{access}}', ov_built:'{{built}}', ov_struct:'{{structure}}', ov_units:'{{total_units}}戸', ov_area:'{{area}}', ov_layout:'{{layout}}', ov_park:'{{parking}}', ov_fee:'管理費 {{management_fee}} ／ 修繕積立金 {{repair_fee}}', ov_pet:'{{pet}}', ov_biz:'{{developer}}',
+    catch:'{{ja_catchcopy}}', sub:'{{subtitle}}',
+    stats_lbl:'規模・建築 / ARCHITECTURE &amp; FACILITIES',
+    stat1_l:'総戸数', stat2_l:'専有面積', stat3_l:'所在階',
+    ov_lbl:'物件概要 / PROPERTY OVERVIEW',
+    ov_l_addr:'所在地', ov_l_access:'交通', ov_l_built:'築年月', ov_l_struct:'構造',
+    ov_l_units:'総戸数', ov_l_area:'専有面積', ov_l_layout:'間取り', ov_l_park:'駐車場',
+    ov_l_fee:'月額費用', ov_l_pet:'ペット', ov_l_biz:'事業者',
+    ov_addr:'{{address}}', ov_access:'{{access}}', ov_built:'{{built}}', ov_struct:'{{structure}}',
+    ov_units:'{{total_units}}戸', ov_area:'{{area}}', ov_layout:'{{layout}}', ov_park:'{{parking}}',
+    ov_fee:'管理費 {{management_fee}} ／ 修繕積立金 {{repair_fee}}', ov_pet:'{{pet}}', ov_biz:'{{developer}}',
     uf_lbl:'専有部設備', fac_lbl:'共用施設',
     p2_lbl:'LIFESTYLE &amp; WHY WE RECOMMEND',
     rec_ttl:'{{recommend_comment}}',
-    stage_kicker:'PROPERTY HIGHLIGHT',
-    stage_title:'{{stage_title}}',
-    stage_body:'{{ja_stage_body}}',
+    stage_kicker:'PROPERTY HIGHLIGHT', stage_title:'{{stage_title}}', stage_body:'{{ja_stage_body}}',
     area_lbl:'エリア環境 / AREA HIGHLIGHTS',
     sum_lbl:'SUMMARY', sum_copy:'{{ja_summary}}',
     sum_torihiki:'取引態様・仲介手数料', sum_val:'売買価格の3%＋6万円（別途消費税）',
-    p3_lbl:'間取り図・部屋構成 / FLOOR PLAN &amp; LAYOUT', rooms_lbl:'部屋構成 / ROOMS',
-    eq_lbl:'主要設備 / EQUIPMENT',
+    p3_lbl:'間取り図・部屋構成 / FLOOR PLAN &amp; LAYOUT',
+    rooms_lbl:'部屋構成 / ROOMS', eq_lbl:'主要設備 / EQUIPMENT',
     plan_lbl:'PLAN HIGHLIGHTS', plan_txt:'{{plan_highlight}}',
-    footer_addr:'{{address}} ｜ {{property_name}}'
+    footer_addr:'{{address}} ｜ {{property_name}}',
+    contact_ttl:'CONTACT / お問い合わせ',
+    contact_l_agent:'担当', contact_l_tel:'TEL', contact_l_mail:'MAIL',
+    contact_l_web:'WEB', contact_l_url:'URL', contact_l_line:'LINE',
+    contact_note:'内見・オンライン説明・詳細資料のご希望は、上記までお気軽にお問い合わせください。'
   },
   en: {
     prop_label:'PREMIUM RESIDENCE PROPOSAL',
-    catch:'{{en_catchcopy}}',
-    stage_body:'{{en_stage_body}}',
-    sum_copy:'{{en_summary}}',
-    rec_ttl:'{{en_recommend_comment}}',
-    stats_lbl:'ARCHITECTURE &amp; FACILITIES', stat1_l:'Total Units', stat2_l:'Floor Area', stat3_l:'Floor',
-    ov_lbl:'PROPERTY OVERVIEW', ov_l_addr:'Address', ov_l_access:'Access', ov_l_built:'Built', ov_l_struct:'Structure', ov_l_units:'Total Units', ov_l_area:'Floor Area', ov_l_layout:'Layout', ov_l_park:'Parking', ov_l_fee:'Monthly Fee', ov_l_pet:'Pets', ov_l_biz:'Developer',
-    p2_lbl:'LIFESTYLE &amp; WHY WE RECOMMEND',
-    stage_kicker:'PROPERTY HIGHLIGHT',
+    catch:'{{en_catchcopy}}', stage_body:'{{en_stage_body}}',
+    sum_copy:'{{en_summary}}', rec_ttl:'{{en_recommend_comment}}',
+    stats_lbl:'ARCHITECTURE &amp; FACILITIES',
+    stat1_l:'Total Units', stat2_l:'Floor Area', stat3_l:'Floor',
+    ov_lbl:'PROPERTY OVERVIEW',
+    ov_l_addr:'Address', ov_l_access:'Access', ov_l_built:'Built', ov_l_struct:'Structure',
+    ov_l_units:'Total Units', ov_l_area:'Floor Area', ov_l_layout:'Layout', ov_l_park:'Parking',
+    ov_l_fee:'Monthly Fee', ov_l_pet:'Pets', ov_l_biz:'Developer',
+    p2_lbl:'LIFESTYLE &amp; WHY WE RECOMMEND', stage_kicker:'PROPERTY HIGHLIGHT',
     sum_lbl:'SUMMARY', sum_torihiki:'Commission',
-    p3_lbl:'FLOOR PLAN &amp; LAYOUT', rooms_lbl:'ROOMS',
-    eq_lbl:'EQUIPMENT', plan_lbl:'PLAN HIGHLIGHTS',
-    area_lbl:'AREA HIGHLIGHTS'
+    p3_lbl:'FLOOR PLAN &amp; LAYOUT', rooms_lbl:'ROOMS', eq_lbl:'EQUIPMENT',
+    plan_lbl:'PLAN HIGHLIGHTS', area_lbl:'AREA HIGHLIGHTS',
+    contact_ttl:'CONTACT US',
+    contact_l_agent:'Agent', contact_l_tel:'TEL', contact_l_mail:'MAIL',
+    contact_l_web:'WEB', contact_l_url:'URL', contact_l_line:'LINE',
+    contact_note:'For property tours, online consultations, or detailed materials, please feel free to contact us.'
   },
   'zh-cn': {
     prop_label:'高端住宅提案',
-    catch:'{{zhcn_catchcopy}}',
-    stage_body:'{{zhcn_stage_body}}',
-    sum_copy:'{{zhcn_summary}}',
-    rec_ttl:'{{zhcn_recommend_comment}}',
+    catch:'{{zhcn_catchcopy}}', stage_body:'{{zhcn_stage_body}}',
+    sum_copy:'{{zhcn_summary}}', rec_ttl:'{{zhcn_recommend_comment}}',
     stats_lbl:'规模・建筑', stat1_l:'总户数', stat2_l:'专有面积', stat3_l:'楼层',
-    ov_lbl:'物件概要', ov_l_addr:'地址', ov_l_access:'交通', ov_l_built:'建筑年月', ov_l_struct:'结构', ov_l_units:'总户数', ov_l_area:'专有面积', ov_l_layout:'格局', ov_l_park:'停车场', ov_l_fee:'月额费用', ov_l_pet:'宠物', ov_l_biz:'开发商',
-    p2_lbl:'生活方式与推荐理由',
-    stage_kicker:'物件亮点',
+    ov_lbl:'物件概要',
+    ov_l_addr:'地址', ov_l_access:'交通', ov_l_built:'建筑年月', ov_l_struct:'结构',
+    ov_l_units:'总户数', ov_l_area:'专有面积', ov_l_layout:'格局', ov_l_park:'停车场',
+    ov_l_fee:'月额费用', ov_l_pet:'宠物', ov_l_biz:'开发商',
+    p2_lbl:'生活方式与推荐理由', stage_kicker:'物件亮点',
     sum_lbl:'综合评价', sum_torihiki:'佣金',
-    p3_lbl:'平面图・房间构成', rooms_lbl:'房间构成',
-    eq_lbl:'主要设备', plan_lbl:'平面图亮点',
-    area_lbl:'周边环境'
+    p3_lbl:'平面图・房间构成', rooms_lbl:'房间构成', eq_lbl:'主要设备',
+    plan_lbl:'平面图亮点', area_lbl:'周边环境',
+    contact_ttl:'联系方式',
+    contact_l_agent:'负责人', contact_l_tel:'电话', contact_l_mail:'邮箱',
+    contact_l_web:'官网', contact_l_url:'咨询', contact_l_line:'LINE',
+    contact_note:'如需实地看房、线上说明或详细资料，请随时联系我们。'
   },
   'zh-tw': {
     prop_label:'高端住宅提案',
-    catch:'{{zhtw_catchcopy}}',
-    stage_body:'{{zhtw_stage_body}}',
-    sum_copy:'{{zhtw_summary}}',
-    rec_ttl:'{{zhtw_recommend_comment}}',
+    catch:'{{zhtw_catchcopy}}', stage_body:'{{zhtw_stage_body}}',
+    sum_copy:'{{zhtw_summary}}', rec_ttl:'{{zhtw_recommend_comment}}',
     stats_lbl:'規模・建築', stat1_l:'總戶數', stat2_l:'專有面積', stat3_l:'樓層',
-    ov_lbl:'物件概要', ov_l_addr:'地址', ov_l_access:'交通', ov_l_built:'建築年月', ov_l_struct:'結構', ov_l_units:'總戶數', ov_l_area:'專有面積', ov_l_layout:'格局', ov_l_park:'停車場', ov_l_fee:'月額費用', ov_l_pet:'寵物', ov_l_biz:'開發商',
-    p2_lbl:'生活方式與推薦理由',
-    stage_kicker:'物件亮點',
+    ov_lbl:'物件概要',
+    ov_l_addr:'地址', ov_l_access:'交通', ov_l_built:'建築年月', ov_l_struct:'結構',
+    ov_l_units:'總戶數', ov_l_area:'專有面積', ov_l_layout:'格局', ov_l_park:'停車場',
+    ov_l_fee:'月額費用', ov_l_pet:'寵物', ov_l_biz:'開發商',
+    p2_lbl:'生活方式與推薦理由', stage_kicker:'物件亮點',
     sum_lbl:'綜合評價', sum_torihiki:'佣金',
-    p3_lbl:'平面圖・房間構成', rooms_lbl:'房間構成',
-    eq_lbl:'主要設備', plan_lbl:'平面圖亮點',
-    area_lbl:'周邊環境'
+    p3_lbl:'平面圖・房間構成', rooms_lbl:'房間構成', eq_lbl:'主要設備',
+    plan_lbl:'平面圖亮點', area_lbl:'周邊環境',
+    contact_ttl:'聯絡方式',
+    contact_l_agent:'負責人', contact_l_tel:'電話', contact_l_mail:'郵箱',
+    contact_l_web:'官網', contact_l_url:'諮詢', contact_l_line:'LINE',
+    contact_note:'如需實地看房、線上說明或詳細資料，請隨時聯絡我們。'
   }
 };
 const TB={
-  ja:  {print:'🖨 PDF印刷'},
-  en:  {print:'🖨 Print PDF'},
-  'zh-cn':{print:'🖨 打印PDF'},
-  'zh-tw':{print:'🖨 列印PDF'}
+  ja:{print:'🖨 PDF印刷'},en:{print:'🖨 Print PDF'},
+  'zh-cn':{print:'🖨 打印PDF'},'zh-tw':{print:'🖨 列印PDF'}
 };
 function setLang(lang){
   const t=T[lang]; if(!t)return;
@@ -405,6 +600,53 @@ function setLang(lang){
   document.querySelectorAll('[data-tb]').forEach(el=>{
     const k=el.getAttribute('data-tb');
     if(tb[k]!==undefined) el.innerHTML=tb[k];
+  });
+}
+
+/* ── 画像比率による自動レイアウト判定 ── */
+(function(){
+  var THRESH_LAND=1.2, THRESH_PORT=0.85;
+
+  function applyLayout(img){
+    var ratio=img.naturalWidth/img.naturalHeight;
+    if(!ratio||!isFinite(ratio))return;
+    var container=img.closest('[data-layout-container]');
+    if(!container)return;
+    container.classList.remove('is-landscape','is-portrait','is-square');
+    if(ratio>=THRESH_LAND)       container.classList.add('is-landscape');
+    else if(ratio<=THRESH_PORT)  container.classList.add('is-portrait');
+    else                          container.classList.add('is-square');
+  }
+
+  function fallback(img){
+    var container=img.closest('[data-layout-container]');
+    if(!container)return;
+    /* srcが空の場合はデフォルトクラスをそのまま維持（is-landscapeまたはis-portrait） */
+  }
+
+  document.querySelectorAll('[data-auto-layout-image]').forEach(function(img){
+    if(img.complete && img.naturalWidth>0){
+      applyLayout(img);
+    } else {
+      img.addEventListener('load',function(){applyLayout(img);},{once:true});
+      img.addEventListener('error',function(){fallback(img);},{once:true});
+    }
+  });
+})();
+
+/* ── 印刷：画像読み込み完了を待ってからprint() ── */
+function doPrint(){
+  var imgs=Array.from(document.querySelectorAll('[data-auto-layout-image]'));
+  var unloaded=imgs.filter(function(i){return !i.complete||i.naturalWidth===0;});
+  if(!unloaded.length){window.print();return;}
+  var done=0;
+  function check(){
+    done++;
+    if(done>=unloaded.length) window.print();
+  }
+  unloaded.forEach(function(i){
+    i.addEventListener('load',check,{once:true});
+    i.addEventListener('error',check,{once:true});
   });
 }
 </script>

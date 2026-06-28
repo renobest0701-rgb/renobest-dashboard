@@ -19,6 +19,8 @@ const ALLOWED_KEYS = [
   'img_area0', 'img_area1', 'img_area2',
   'img_common0', 'img_common1', 'img_common2',
   'img_logo', 'img_qr_line', 'img_qr_wechat',
+  // 連絡先
+  'company_name', 'agent_display', 'tel', 'mail', 'web', 'inquiry_url',
 ]
 
 // 顧客用HTMLから除去するパターン
@@ -179,6 +181,13 @@ export async function POST(req: NextRequest) {
     img_logo: images?.logo ?? '',
     img_qr_line: images?.qr_line ?? '',
     img_qr_wechat: images?.qr_wechat ?? '',
+    // 連絡先（デフォルト値。将来的にウィザードで入力可能にする）
+    company_name: '株式会社RENOBEST',
+    agent_display: '山田正文',
+    tel: '要入力',
+    mail: '要入力',
+    web: '要入力',
+    inquiry_url: '要入力',
   }
 
   const adminHtml = replaceSlots(adminTemplate, replacements)
